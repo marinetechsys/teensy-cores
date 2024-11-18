@@ -33,7 +33,7 @@
 
 HardwareSerial3 Serial3(&serialEvent3);
 
-uint8_t _serialEvent3_default __attribute__((weak)) PROGMEM = 0 ;
+extern const uint8_t _serialEvent3_default __attribute__((weak)) PROGMEM = 0 ;
 
 void HardwareSerial3::begin(uint32_t baud) { 
 	serial3_begin(BAUD2DIV3(baud));

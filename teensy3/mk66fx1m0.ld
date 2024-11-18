@@ -60,10 +60,16 @@ SECTIONS
 	} > FLASH = 0xFF
 
 	.ARM.exidx : {
+    . = ALIGN(4);
 		__exidx_start = .;
 		*(.ARM.exidx* .gnu.linkonce.armexidx.*)
 		__exidx_end = .;
 	} > FLASH
+  
+  .ARM.extab : {
+    . = ALIGN(4);
+    *(.ARM.extab* .gnu.linkonce.armextab.*)
+  } > FLASH
 	_etext = .;
 
 	.usbdescriptortable (NOLOAD) : {

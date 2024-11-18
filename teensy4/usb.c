@@ -366,6 +366,7 @@ void usb_isr(void)
 		usb_flightsim_flush_output();
 		#endif
 	}
+	__dsb();
 }
 
 
@@ -409,7 +410,7 @@ transfer_t endpoint0_transfer_ack  __attribute__ ((aligned(32)));;
 
 static uint8_t reply_buffer[8];
 
-static void endpoint0_setup(uint64_t setupdata)
+FLASHMEM static void endpoint0_setup(uint64_t setupdata)
 {
 	setup_t setup;
 	uint32_t endpoint, dir, ctrl;
@@ -928,7 +929,7 @@ void usb_prepare_transfer(transfer_t *transfer, const void *data, uint32_t len, 
 }
 
 #if 0
-void usb_print_transfer_log(void)
+FLASHMEM void usb_print_transfer_log(void)
 {
 	uint32_t i, count;
 	printf("log %d transfers\n", transfer_log_count);

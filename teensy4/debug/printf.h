@@ -1,3 +1,5 @@
+#pragma once
+
 // uncommenting the line below will enable the debug printf statements in cores\teensy4
 // by default it will print to the Serial4 TX pin at baud rate of 115200
 //#define PRINT_DEBUG_STUFF
@@ -22,6 +24,7 @@ void printf_debug(const char *format, ...);
 #else
 #define printf_init()
 #define printf(...)
+#define printf_debug(...)
 #define printf_debug_init()
 
 #endif

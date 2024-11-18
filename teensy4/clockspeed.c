@@ -1,6 +1,9 @@
+#pragma GCC optimize ("-Os")
+
 #include <stdint.h>
 #include "imxrt.h"
 #include "wiring.h"
+#include "avr/pgmspace.h"
 #include "debug/printf.h"
 
 // A brief explanation of F_CPU_ACTUAL vs F_CPU
@@ -27,7 +30,7 @@ uint32_t set_arm_clock(uint32_t frequency);
 //  CCM_CBCDR  AHB_PODF
 //  CCM_CBCDR  SEMC_PODF
 
-uint32_t set_arm_clock(uint32_t frequency)
+FLASHMEM uint32_t set_arm_clock(uint32_t frequency)
 {
 	uint32_t cbcdr = CCM_CBCDR; // pg 1021
 	uint32_t cbcmr = CCM_CBCMR; // pg 1023

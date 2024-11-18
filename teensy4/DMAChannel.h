@@ -33,6 +33,9 @@
 
 #include "imxrt.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wvolatile"
+
 // Discussion about DMAChannel is here:
 // http://forum.pjrc.com/threads/25778-Could-there-be-something-like-an-ISR-template-function/page3
 
@@ -406,6 +409,7 @@ public:
 		copy_tcd(TCD, rhs.TCD);
 		return *this;
 	}
+	constexpr DMASetting & operator = (const DMASetting & rhs) = default;
 private:
 	TCD_t tcddata __attribute__((aligned(32)));
 };
@@ -511,11 +515,13 @@ public:
 	// transfer is completed.
 	void attachInterrupt(void (*isr)(void)) {
 		_VectorsRam[channel + IRQ_DMA_CH0 + 16] = isr;
+		__asm volatile ("dsb st" ::: "memory");
 		NVIC_ENABLE_IRQ(IRQ_DMA_CH0 + channel);
 	}
 
 	void attachInterrupt(void (*isr)(void), uint8_t prio) {
 		_VectorsRam[channel + IRQ_DMA_CH0 + 16] = isr;
+		__asm volatile ("dsb st" ::: "memory");
 		NVIC_ENABLE_IRQ(IRQ_DMA_CH0 + channel);
 		NVIC_SET_PRIORITY(IRQ_DMA_CH0 + channel, prio);
 	}
@@ -587,5 +593,7 @@ void DMAPriorityOrder(DMAChannel &ch1, DMAChannel &ch2, DMAChannel &ch3, DMAChan
 
 
 #endif // __cplusplus
+
+#pragma GCC diagnostic pop
 
 #endif // DMAChannel_h_

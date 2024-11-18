@@ -32,7 +32,7 @@
 
 HardwareSerial2 Serial2(&serialEvent2);
 
-uint8_t _serialEvent2_default __attribute__((weak)) PROGMEM = 0 ;
+extern const uint8_t _serialEvent2_default __attribute__((weak)) PROGMEM = 0 ;
 
 void HardwareSerial2::begin(uint32_t baud) {
 	serial2_begin(BAUD2DIV2(baud));

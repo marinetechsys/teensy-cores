@@ -27,8 +27,10 @@
 
 #define PROGMEM
 #define FLASHMEM
+#define FLASHMEM_T
 #define PGM_P  const char *
 #define PSTR(str) (str)
+#define PSTR_T(str) (str)
 
 #define _SFR_BYTE(n) (n)
 

@@ -30,22 +30,4 @@
 #ifndef NEW_H
 #define NEW_H
 
-#ifdef __cplusplus
-
-#include <stdlib.h>
-
-void * operator new(size_t size);
-void * operator new[](size_t size);
-void operator delete(void * ptr);
-void operator delete[](void * ptr);
-void operator delete(void * ptr, size_t size);
-void operator delete[](void * ptr, size_t size);
-
-extern "C" int __cxa_guard_acquire(char *);
-extern "C" void __cxa_guard_release (char *);
-extern "C" void __cxa_guard_abort (char *);
-extern "C" void __cxa_pure_virtual(void);
-
-#endif // __cplusplus
-
 #endif

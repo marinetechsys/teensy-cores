@@ -658,6 +658,7 @@ const uint8_t flashconfigbytes[16] = {
 	0xFF, 0xFF, 0xFF, 0xFF, FSEC, FOPT, 0xFF, 0xFF
 };
 
+#pragma GCC optimize ("-O2")
 
 // Automatically initialize the RTC.  When the build defines the compile
 // time, and the user has added a crystal, the RTC will automatically
@@ -680,18 +681,20 @@ static void startup_default_late_hook(void) {}
 void startup_early_hook(void)		__attribute__ ((weak, alias("startup_default_early_hook")));
 void startup_late_hook(void)		__attribute__ ((weak, alias("startup_default_late_hook")));
 
+static void memory_copy(uint32_t *dest, const uint32_t *src, uint32_t *dest_end);
+static void memory_clear(uint32_t *dest, uint32_t *dest_end);
+static void init_systick(void);
+static void init_rtc(void);
 
 #if defined(__PURE_CODE__) || !defined(__OPTIMIZE__) || defined(__clang__)
 // cases known to compile too large for 0-0x400 memory region
-__attribute__ ((optimize("-Os")))
+//__attribute__ ((optimize("-Os")))
 #else
 // hopefully all others fit into startup section (below 0x400)
-__attribute__ ((section(".startup"),optimize("-Os")))
+__attribute__ ((section(".startup")))
 #endif
 void ResetHandler(void)
 {
-	uint32_t *src = &_etext;
-	uint32_t *dest = &_sdata;
 	unsigned int i;
 #if F_CPU <= 2000000
 	volatile int n;
@@ -767,9 +770,8 @@ void ResetHandler(void)
 #endif
     
 	// TODO: do this while the PLL is waiting to lock....
-	while (dest < &_edata) *dest++ = *src++;
-	dest = &_sbss;
-	while (dest < &_ebss) *dest++ = 0;
+	memory_copy(&_sdata, &_etext, &_edata);
+	memory_clear(&_sbss, &_ebss);
 
 	// default all interrupts to medium priority level
 	for (i=0; i < NVIC_NUM_INTERRUPTS + 16; i++) _VectorsRam[i] = _VectorsFlash[i];
@@ -1112,48 +1114,14 @@ void ResetHandler(void)
 	}
 #endif
 
-	// initialize the SysTick counter
-	SYST_RVR = (F_CPU / 1000) - 1;
-	SYST_CVR = 0;
-	SYST_CSR = SYST_CSR_CLKSOURCE | SYST_CSR_TICKINT | SYST_CSR_ENABLE;
-	SCB_SHPR3 = 0x20200000;  // Systick = priority 32
+	init_systick();
 
 	//init_pins();
 	__enable_irq();
 
 	_init_Teensyduino_internal_();
 
-#if defined(KINETISK)
-	// RTC initialization
-	if (RTC_SR & RTC_SR_TIF) {
-		// this code will normally run on a power-up reset
-		// when VBAT has detected a power-up.  Normally our
-		// compiled-in time will be stale.  Write a special
-		// flag into the VBAT register file indicating the
-		// RTC is set with known-stale time and should be
-		// updated when fresh time is known.
-		#if ARDUINO >= 10600
-		rtc_set((uint32_t)&__rtc_localtime);
-		#else
-		rtc_set(TIME_T);
-		#endif
-		*(uint32_t *)0x4003E01C = 0x5A94C3A5;
-	}
-	if ((RCM_SRS0 & RCM_SRS0_PIN) && (*(uint32_t *)0x4003E01C == 0x5A94C3A5)) {
-		// this code should run immediately after an upload
-		// where the Teensy Loader causes the Mini54 to reset.
-		// Our compiled-in time will be very fresh, so set
-		// the RTC with this, and clear the VBAT resister file
-		// data so we don't mess with the time after it's been
-		// set well.
-		#if ARDUINO >= 10600
-		rtc_set((uint32_t)&__rtc_localtime);
-		#else
-		rtc_set(TIME_T);
-		#endif
-		*(uint32_t *)0x4003E01C = 0;
-	}
-#endif
+  init_rtc();
 
 	startup_late_hook();
 	__libc_init_array();
@@ -1161,6 +1129,69 @@ void ResetHandler(void)
 	main();
 	
 	while (1) ;
+}
+
+__attribute__((section(".startup"), noinline, optimize("no-tree-loop-distribute-patterns")))
+static void memory_copy(uint32_t *dest, const uint32_t *src, uint32_t *dest_end)
+{
+	if (dest == src) return;
+	while (dest < dest_end) {
+		*dest++ = *src++;
+	}
+}
+
+__attribute__((section(".startup"), noinline, optimize("no-tree-loop-distribute-patterns")))
+static void memory_clear(uint32_t *dest, uint32_t *dest_end)
+{
+	while (dest < dest_end) {
+		*dest++ = 0;
+	}
+}
+
+__attribute__((section(".startup"), noinline))
+static void init_systick(void)
+{
+	// initialize the SysTick counter
+	SYST_RVR = (F_CPU / 1000) - 1;
+	SYST_CVR = 0;
+	SYST_CSR = SYST_CSR_CLKSOURCE | SYST_CSR_TICKINT | SYST_CSR_ENABLE;
+	SCB_SHPR3 = 0x20200000;  // Systick = priority 32
+}
+
+__attribute__((noinline))
+static void init_rtc(void)
+{
+	#if defined(KINETISK)
+		// RTC initialization
+		if (RTC_SR & RTC_SR_TIF) {
+			// this code will normally run on a power-up reset
+			// when VBAT has detected a power-up.  Normally our
+			// compiled-in time will be stale.  Write a special
+			// flag into the VBAT register file indicating the
+			// RTC is set with known-stale time and should be
+			// updated when fresh time is known.
+			#if ARDUINO >= 10600
+			rtc_set((uint32_t)&__rtc_localtime);
+			#else
+			rtc_set(TIME_T);
+			#endif
+			*(uint32_t *)0x4003E01C = 0x5A94C3A5;
+		}
+		if ((RCM_SRS0 & RCM_SRS0_PIN) && (*(uint32_t *)0x4003E01C == 0x5A94C3A5)) {
+			// this code should run immediately after an upload
+			// where the Teensy Loader causes the Mini54 to reset.
+			// Our compiled-in time will be very fresh, so set
+			// the RTC with this, and clear the VBAT resister file
+			// data so we don't mess with the time after it's been
+			// set well.
+			#if ARDUINO >= 10600
+			rtc_set((uint32_t)&__rtc_localtime);
+			#else
+			rtc_set(TIME_T);
+			#endif
+			*(uint32_t *)0x4003E01C = 0;
+		}
+	#endif
 }
 
 char *__brkval = (char *)&_ebss;
@@ -1196,6 +1227,8 @@ void * _sbrk(int incr)
 	}
 	return prev;
 }
+
+#pragma GCC optimize ("-Os")
 
 __attribute__((weak)) 
 int _read(int file, char *ptr, int len)
@@ -1242,14 +1275,16 @@ void __cxa_pure_virtual()
 	while (1);
 }
 
+__extension__ typedef int __guard __attribute__((mode (__DI__)));
+
 __attribute__((weak)) 
-int __cxa_guard_acquire (char *g)
+int __cxa_guard_acquire (__guard *g)
 {
 	return !(*g);
 }
 
 __attribute__((weak)) 
-void __cxa_guard_release(char *g)
+void __cxa_guard_release(__guard *g)
 {
 	*g = 1;
 }
@@ -1259,6 +1294,17 @@ void abort(void)
 {
 	while (1) ;
 }
+
+__attribute__((weak))
+void _init() {
+}
+
+__attribute__((weak))
+void _fini() {
+}
+
+__attribute__((weak))
+void* __dso_handle = 0;
 
 #pragma GCC diagnostic pop
 

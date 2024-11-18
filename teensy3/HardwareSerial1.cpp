@@ -32,7 +32,7 @@
 #include "HardwareSerial.h"
 
 
-uint8_t _serialEvent1_default __attribute__((weak)) PROGMEM = 0 ;
+extern const uint8_t _serialEvent1_default __attribute__((weak)) PROGMEM = 0 ;
 
 HardwareSerial Serial1(&serialEvent1);
 

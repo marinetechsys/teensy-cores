@@ -5890,11 +5890,20 @@ extern void (* const _VectorsFlash[NVIC_NUM_INTERRUPTS+16])(void);
 
 // Cache management functions for compatibility with Teensy 4.0
 __attribute__((always_inline, unused))
-static inline void arm_dcache_flush(void *addr, uint32_t size) { }
+static inline void arm_dcache_flush(void *addr, uint32_t size) {
+	(void) addr;
+    (void) size;
+}
 __attribute__((always_inline, unused))
-static inline void arm_dcache_delete(void *addr, uint32_t size) { }
+static inline void arm_dcache_delete(void *addr, uint32_t size) {
+	(void) addr;
+    (void) size;
+}
 __attribute__((always_inline, unused))
-static inline void arm_dcache_flush_delete(void *addr, uint32_t size) { }
+static inline void arm_dcache_flush_delete(void *addr, uint32_t size) {
+	(void) addr;
+    (void) size;
+}
 
 #ifdef __cplusplus
 }

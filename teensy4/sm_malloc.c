@@ -23,7 +23,7 @@ again:	if (!smalloc_verify_pool(spool)) {
 	|| n > (spool->pool_size - HEADER_SZ)) goto oom;
 
 	shdr = basehdr = spool->pool;
-	while (CHAR_PTR(shdr)-CHAR_PTR(basehdr) < spool->pool_size) {
+	while ((size_t) (CHAR_PTR(shdr)-CHAR_PTR(basehdr)) < spool->pool_size) {
 		/*
 		 * Already allocated block.
 		 * Skip it by jumping over it.
@@ -41,7 +41,7 @@ again:	if (!smalloc_verify_pool(spool)) {
 		 */
 		else {
 			dhdr = shdr; found = 0;
-			while (CHAR_PTR(dhdr)-CHAR_PTR(basehdr) < spool->pool_size) {
+			while ((size_t) (CHAR_PTR(dhdr)-CHAR_PTR(basehdr)) < spool->pool_size) {
 				/* pre calculate free block size */
 				x = CHAR_PTR(dhdr)-CHAR_PTR(shdr);
 				/*

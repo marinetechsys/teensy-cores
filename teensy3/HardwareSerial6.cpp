@@ -35,7 +35,7 @@
 
 HardwareSerial6 Serial6(&serialEvent6);
 
-uint8_t _serialEvent6_default __attribute__((weak)) PROGMEM = 0 ;
+extern const uint8_t _serialEvent6_default __attribute__((weak)) PROGMEM = 0 ;
 
 void HardwareSerial6::begin(uint32_t baud) { 	
 #if defined(__MK66FX1M0__)	// For LPUART just pass baud straight in. 

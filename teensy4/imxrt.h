@@ -431,13 +431,13 @@ enum IRQ_NUMBER_t {
 
 
 #ifdef __cplusplus
-extern "C" void (* volatile _VectorsRam[NVIC_NUM_INTERRUPTS+16])(void);
+extern "C" void (* _VectorsRam[NVIC_NUM_INTERRUPTS+16])(void);
 static inline void attachInterruptVector(IRQ_NUMBER_t irq, void (*function)(void)) __attribute__((always_inline, unused));
-static inline void attachInterruptVector(IRQ_NUMBER_t irq, void (*function)(void)) { _VectorsRam[irq + 16] = function; asm volatile("": : :"memory"); }
+static inline void attachInterruptVector(IRQ_NUMBER_t irq, void (*function)(void)) { _VectorsRam[irq + 16] = function; asm volatile("dsb st" ::: "memory"); }
 #else
-extern void (* volatile _VectorsRam[NVIC_NUM_INTERRUPTS+16])(void);
+extern void (* _VectorsRam[NVIC_NUM_INTERRUPTS+16])(void);
 static inline void attachInterruptVector(enum IRQ_NUMBER_t irq, void (*function)(void)) __attribute__((always_inline, unused));
-static inline void attachInterruptVector(enum IRQ_NUMBER_t irq, void (*function)(void)) { _VectorsRam[irq + 16] = function; asm volatile("": : :"memory"); }
+static inline void attachInterruptVector(enum IRQ_NUMBER_t irq, void (*function)(void)) { _VectorsRam[irq + 16] = function; asm volatile("dsb st" ::: "memory"); }
 #endif
 
 typedef struct {
@@ -10293,6 +10293,42 @@ static inline void arm_dcache_flush_delete(void *addr, uint32_t size)
 	} while (location < end_addr);
 	asm("dsb");
 	asm("isb");
+}
+
+/**
+  \brief   Instruction Synchronization Barrier
+  \details Instruction Synchronization Barrier flushes the pipeline in the processor,
+           so that all instructions following the ISB are fetched from cache or memory,
+           after the instruction has been completed.
+ */
+__attribute__((always_inline))
+static inline void __isb(void)
+{
+  __asm volatile ("isb" ::: "memory");
+}
+
+
+/**
+  \brief   Data Synchronization Barrier
+  \details Acts as a special kind of Data Memory Barrier.
+           It completes when all explicit memory accesses before this instruction complete.
+ */
+__attribute__((always_inline))
+static inline void __dsb(void)
+{
+  __asm volatile ("dsb" ::: "memory");
+}
+
+
+/**
+  \brief   Data Memory Barrier
+  \details Ensures the apparent order of the explicit memory operations before
+           and after the instruction, without ensuring their completion.
+ */
+__attribute__((always_inline))
+static inline void __dmb(void)
+{
+  __asm volatile ("dmb" ::: "memory");
 }
 
 // Crash report info stored in the top 128 bytes of OCRAM (at 0x2027FF80)

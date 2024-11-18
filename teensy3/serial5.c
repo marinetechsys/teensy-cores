@@ -227,6 +227,7 @@ void serial5_set_tx(uint8_t pin, uint8_t opendrain)
 
 void serial5_set_rx(uint8_t pin)
 {
+	(void) pin;
 }
 
 int serial5_set_rts(uint8_t pin)

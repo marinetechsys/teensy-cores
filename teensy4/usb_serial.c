@@ -54,7 +54,7 @@
 uint32_t usb_cdc_line_coding[2];
 volatile uint32_t usb_cdc_line_rtsdtr_millis;
 volatile uint8_t usb_cdc_line_rtsdtr=0;
-volatile uint8_t usb_cdc_transmit_flush_timer=0;
+//volatile uint8_t usb_cdc_transmit_flush_timer=0;
 
 static volatile uint8_t tx_noautoflush=0;
 extern volatile uint8_t usb_high_speed;
@@ -154,7 +154,7 @@ static void rx_event(transfer_t *t)
 			// a previous packet is still buffered
 			uint32_t ii = rx_list[head];
 			uint32_t count = rx_count[ii];
-			if (len <= CDC_RX_SIZE_480 - count) {
+			if (len <= CDC_RX_SIZE_480 - (int32_t) count) {
 				// previous buffer has enough free space for this packet's data
 				memcpy(rx_buffer + ii * CDC_RX_SIZE_480 + count,
 					rx_buffer + i * CDC_RX_SIZE_480, len);

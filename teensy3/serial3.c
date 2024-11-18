@@ -313,6 +313,7 @@ void serial3_set_rx(uint8_t pin)
 	}
 	rx_pin_num = pin;
 	#endif
+  (void) pin;
 }
 
 int serial3_set_rts(uint8_t pin)

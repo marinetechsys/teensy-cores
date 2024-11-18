@@ -301,6 +301,7 @@ void serial6_set_tx(uint8_t pin, uint8_t opendrain)
 
 void serial6_set_rx(uint8_t pin)
 {
+	(void) pin;
 }
 
 int serial6_set_rts(uint8_t pin)

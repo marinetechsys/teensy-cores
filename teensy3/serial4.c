@@ -282,6 +282,7 @@ int serial4_set_rts(uint8_t pin)
 
 int serial4_set_cts(uint8_t pin)
 {
+	(void) pin;
 	return 0;
 }
 
