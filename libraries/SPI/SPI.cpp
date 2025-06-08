@@ -11,6 +11,10 @@
 #include "SPI.h"
 #include "pins_arduino.h"
 
+#ifndef INPUT_DISABLE
+#define INPUT_DISABLE 0
+#endif
+
 //#define DEBUG_DMA_TRANSFERS
 
 /**********************************************************/
