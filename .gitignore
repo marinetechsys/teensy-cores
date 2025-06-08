@@ -9,3 +9,5 @@ nbproject
 *.orig
 *.tmp
 *.TMP
+
+.idea/
