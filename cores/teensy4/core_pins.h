@@ -32,11 +32,47 @@
 #include "imxrt.h"
 #include "pins_arduino.h"
 
+#ifndef HIGH
+#define HIGH 1
+#endif
+#ifndef LOW
+#define LOW 0
+#endif
+#ifndef INPUT
+#define INPUT 0
+#endif
+#ifndef OUTPUT
+#define OUTPUT 1
+#endif
+#ifndef INPUT_PULLUP
+#define INPUT_PULLUP 2
+#endif
+#ifndef INPUT_PULLDOWN
+#define INPUT_PULLDOWN 3
+#endif
+#ifndef OUTPUT_OPENDRAIN
+#define OUTPUT_OPENDRAIN 4
+#endif
+#ifndef INPUT_DISABLE
+#define INPUT_DISABLE 5
+#endif
 #ifndef LSBFIRST
-#define LSBFIRST		0
+#define LSBFIRST 0
 #endif
 #ifndef MSBFIRST
-#define MSBFIRST		1
+#define MSBFIRST 1
+#endif
+#ifndef _BV
+#define _BV(n) (1 << (n))
+#endif
+#ifndef CHANGE
+#define CHANGE 4
+#endif
+#ifndef FALLING
+#define FALLING 2
+#endif
+#ifndef RISING
+#define RISING 3
 #endif
 
 
