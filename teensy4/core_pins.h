@@ -32,20 +32,12 @@
 #include "imxrt.h"
 #include "pins_arduino.h"
 
-#define HIGH			1
-#define LOW			0
-#define INPUT			0
-#define OUTPUT			1
-#define INPUT_PULLUP		2
-#define INPUT_PULLDOWN		3
-#define OUTPUT_OPENDRAIN	4
-#define INPUT_DISABLE		5
+#ifndef LSBFIRST
 #define LSBFIRST		0
+#endif
+#ifndef MSBFIRST
 #define MSBFIRST		1
-#define _BV(n)			(1<<(n))
-#define CHANGE			4
-#define FALLING			2
-#define RISING			3
+#endif
 
 
 #if defined(__IMXRT1062__) && defined(ARDUINO_TEENSY40)

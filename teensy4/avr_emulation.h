@@ -440,70 +440,70 @@ public:
 	}
 	inline PORTDemulation & operator |= (int val) __attribute__((always_inline)) {
 		if (val & (1<<0)) {
-			digitalWriteFast(0, HIGH);
+			digitalWriteFast(0, 1);
 			if (!(CORE_PIN0_DDRREG & CORE_PIN0_BITMASK)) CORE_PIN0_CONFIG = CONFIG_PULLUP;
 		}
 		if (val & (1<<1)) {
-			digitalWriteFast(1, HIGH);
+			digitalWriteFast(1, 1);
 			if (!(CORE_PIN1_DDRREG & CORE_PIN1_BITMASK)) CORE_PIN1_CONFIG = CONFIG_PULLUP;
 		}
 		if (val & (1<<2)) {
-			digitalWriteFast(2, HIGH);
+			digitalWriteFast(2, 1);
 			if (!(CORE_PIN2_DDRREG & CORE_PIN2_BITMASK)) CORE_PIN2_CONFIG = CONFIG_PULLUP;
 		}
 		if (val & (1<<3)) {
-			digitalWriteFast(3, HIGH);
+			digitalWriteFast(3, 1);
 			if (!(CORE_PIN3_DDRREG & CORE_PIN3_BITMASK)) CORE_PIN3_CONFIG = CONFIG_PULLUP;
 		}
 		if (val & (1<<4)) {
-			digitalWriteFast(4, HIGH);
+			digitalWriteFast(4, 1);
 			if (!(CORE_PIN4_DDRREG & CORE_PIN4_BITMASK)) CORE_PIN4_CONFIG = CONFIG_PULLUP;
 		}
 		if (val & (1<<5)) {
-			digitalWriteFast(5, HIGH);
+			digitalWriteFast(5, 1);
 			if (!(CORE_PIN5_DDRREG & CORE_PIN5_BITMASK)) CORE_PIN5_CONFIG = CONFIG_PULLUP;
 		}
 		if (val & (1<<6)) {
-			digitalWriteFast(6, HIGH);
+			digitalWriteFast(6, 1);
 			if (!(CORE_PIN6_DDRREG & CORE_PIN6_BITMASK)) CORE_PIN6_CONFIG = CONFIG_PULLUP;
 		}
 		if (val & (1<<7)) {
-			digitalWriteFast(7, HIGH);
+			digitalWriteFast(7, 1);
 			if (!(CORE_PIN7_DDRREG & CORE_PIN7_BITMASK)) CORE_PIN7_CONFIG = CONFIG_PULLUP;
 		}
 		return *this;
 	}
 	inline PORTDemulation & operator &= (int val) __attribute__((always_inline)) {
 		if (!(val & (1<<0))) {
-			digitalWriteFast(0, LOW);
+			digitalWriteFast(0, 0);
 			if (!(CORE_PIN0_DDRREG & CORE_PIN0_BITMASK)) CORE_PIN0_CONFIG = CONFIG_NOPULLUP;
 		}
 		if (!(val & (1<<1))) {
-			digitalWriteFast(1, LOW);
+			digitalWriteFast(1, 0);
 			if (!(CORE_PIN1_DDRREG & CORE_PIN1_BITMASK)) CORE_PIN1_CONFIG = CONFIG_NOPULLUP;
 		}
 		if (!(val & (1<<2))) {
-			digitalWriteFast(2, LOW);
+			digitalWriteFast(2, 0);
 			if (!(CORE_PIN2_DDRREG & CORE_PIN2_BITMASK)) CORE_PIN2_CONFIG = CONFIG_NOPULLUP;
 		}
 		if (!(val & (1<<3))) {
-			digitalWriteFast(3, LOW);
+			digitalWriteFast(3, 0);
 			if (!(CORE_PIN3_DDRREG & CORE_PIN3_BITMASK)) CORE_PIN3_CONFIG = CONFIG_NOPULLUP;
 		}
 		if (!(val & (1<<4))) {
-			digitalWriteFast(4, LOW);
+			digitalWriteFast(4, 0);
 			if (!(CORE_PIN4_DDRREG & CORE_PIN4_BITMASK)) CORE_PIN4_CONFIG = CONFIG_NOPULLUP;
 		}
 		if (!(val & (1<<5))) {
-			digitalWriteFast(5, LOW);
+			digitalWriteFast(5, 0);
 			if (!(CORE_PIN5_DDRREG & CORE_PIN5_BITMASK)) CORE_PIN5_CONFIG = CONFIG_NOPULLUP;
 		}
 		if (!(val & (1<<6))) {
-			digitalWriteFast(6, LOW);
+			digitalWriteFast(6, 0);
 			if (!(CORE_PIN6_DDRREG & CORE_PIN6_BITMASK)) CORE_PIN6_CONFIG = CONFIG_NOPULLUP;
 		}
 		if (!(val & (1<<7))) {
-			digitalWriteFast(7, LOW);
+			digitalWriteFast(7, 0);
 			if (!(CORE_PIN7_DDRREG & CORE_PIN7_BITMASK)) CORE_PIN7_CONFIG = CONFIG_NOPULLUP;
 		}
 		return *this;
@@ -701,54 +701,54 @@ public:
 	}
 	inline PORTBemulation & operator |= (int val) __attribute__((always_inline)) {
 		if (val & (1<<0)) {
-			digitalWriteFast(8, HIGH);
+			digitalWriteFast(8, 1);
 			if (!(CORE_PIN7_DDRREG & CORE_PIN7_BITMASK)) CORE_PIN8_CONFIG = CONFIG_PULLUP;
 		}
 		if (val & (1<<1)) {
-			digitalWriteFast(9, HIGH);
+			digitalWriteFast(9, 1);
 			if (!(CORE_PIN7_DDRREG & CORE_PIN7_BITMASK)) CORE_PIN9_CONFIG = CONFIG_PULLUP;
 		}
 		if (val & (1<<2)) {
-			digitalWriteFast(10, HIGH);
+			digitalWriteFast(10, 1);
 			if (!(CORE_PIN10_DDRREG & CORE_PIN10_BITMASK)) CORE_PIN10_CONFIG = CONFIG_PULLUP;
 		}
 		if (val & (1<<3)) {
-			digitalWriteFast(11, HIGH);
+			digitalWriteFast(11, 1);
 			if (!(CORE_PIN11_DDRREG & CORE_PIN11_BITMASK)) CORE_PIN11_CONFIG = CONFIG_PULLUP;
 		}
 		if (val & (1<<4)) {
-			digitalWriteFast(12, HIGH);
+			digitalWriteFast(12, 1);
 			if (!(CORE_PIN12_DDRREG & CORE_PIN12_BITMASK)) CORE_PIN12_CONFIG = CONFIG_PULLUP;
 		}
 		if (val & (1<<5)) {
-			digitalWriteFast(13, HIGH);
+			digitalWriteFast(13, 1);
 			if (!(CORE_PIN13_DDRREG & CORE_PIN13_BITMASK)) CORE_PIN13_CONFIG = CONFIG_PULLUP;
 		}
 		return *this;
 	}
 	inline PORTBemulation & operator &= (int val) __attribute__((always_inline)) {
 		if (!(val & (1<<0))) {
-			digitalWriteFast(8, LOW);
+			digitalWriteFast(8, 0);
 			if (!(CORE_PIN8_DDRREG & CORE_PIN8_BITMASK)) CORE_PIN8_CONFIG = CONFIG_NOPULLUP;
 		}
 		if (!(val & (1<<1))) {
-			digitalWriteFast(9, LOW);
+			digitalWriteFast(9, 0);
 			if (!(CORE_PIN9_DDRREG & CORE_PIN9_BITMASK)) CORE_PIN9_CONFIG = CONFIG_NOPULLUP;
 		}
 		if (!(val & (1<<2))) {
-			digitalWriteFast(10, LOW);
+			digitalWriteFast(10, 0);
 			if (!(CORE_PIN10_DDRREG & CORE_PIN10_BITMASK)) CORE_PIN10_CONFIG = CONFIG_NOPULLUP;
 		}
 		if (!(val & (1<<3))) {
-			digitalWriteFast(11, LOW);
+			digitalWriteFast(11, 0);
 			if (!(CORE_PIN11_DDRREG & CORE_PIN11_BITMASK)) CORE_PIN11_CONFIG = CONFIG_NOPULLUP;
 		}
 		if (!(val & (1<<4))) {
-			digitalWriteFast(12, LOW);
+			digitalWriteFast(12, 0);
 			if (!(CORE_PIN12_DDRREG & CORE_PIN12_BITMASK)) CORE_PIN12_CONFIG = CONFIG_NOPULLUP;
 		}
 		if (!(val & (1<<5))) {
-			digitalWriteFast(13, LOW);
+			digitalWriteFast(13, 0);
 			if (!(CORE_PIN13_DDRREG & CORE_PIN13_BITMASK)) CORE_PIN13_CONFIG = CONFIG_NOPULLUP;
 		}
 		return *this;
@@ -914,54 +914,54 @@ public:
 	}
 	inline PORTCemulation & operator |= (int val) __attribute__((always_inline)) {
 		if (val & (1<<0)) {
-			digitalWriteFast(14, HIGH);
+			digitalWriteFast(14, 1);
 			if (!(CORE_PIN14_DDRREG & CORE_PIN14_BITMASK)) CORE_PIN14_CONFIG = CONFIG_PULLUP;
 		}
 		if (val & (1<<1)) {
-			digitalWriteFast(15, HIGH);
+			digitalWriteFast(15, 1);
 			if (!(CORE_PIN15_DDRREG & CORE_PIN15_BITMASK)) CORE_PIN15_CONFIG = CONFIG_PULLUP;
 		}
 		if (val & (1<<2)) {
-			digitalWriteFast(16, HIGH);
+			digitalWriteFast(16, 1);
 			if (!(CORE_PIN16_DDRREG & CORE_PIN16_BITMASK)) CORE_PIN16_CONFIG = CONFIG_PULLUP;
 		}
 		if (val & (1<<3)) {
-			digitalWriteFast(17, HIGH);
+			digitalWriteFast(17, 1);
 			if (!(CORE_PIN17_DDRREG & CORE_PIN17_BITMASK)) CORE_PIN17_CONFIG = CONFIG_PULLUP;
 		}
 		if (val & (1<<4)) {
-			digitalWriteFast(18, HIGH);
+			digitalWriteFast(18, 1);
 			if (!(CORE_PIN18_DDRREG & CORE_PIN18_BITMASK)) CORE_PIN18_CONFIG = CONFIG_PULLUP;
 		}
 		if (val & (1<<5)) {
-			digitalWriteFast(19, HIGH);
+			digitalWriteFast(19, 1);
 			if (!(CORE_PIN19_DDRREG & CORE_PIN19_BITMASK)) CORE_PIN19_CONFIG = CONFIG_PULLUP;
 		}
 		return *this;
 	}
 	inline PORTCemulation & operator &= (int val) __attribute__((always_inline)) {
 		if (!(val & (1<<0))) {
-			digitalWriteFast(14, LOW);
+			digitalWriteFast(14, 0);
 			if (!(CORE_PIN14_DDRREG & CORE_PIN14_BITMASK)) CORE_PIN14_CONFIG = CONFIG_NOPULLUP;
 		}
 		if (!(val & (1<<1))) {
-			digitalWriteFast(15, LOW);
+			digitalWriteFast(15, 0);
 			if (!(CORE_PIN15_DDRREG & CORE_PIN15_BITMASK)) CORE_PIN15_CONFIG = CONFIG_NOPULLUP;
 		}
 		if (!(val & (1<<2))) {
-			digitalWriteFast(16, LOW);
+			digitalWriteFast(16, 0);
 			if (!(CORE_PIN16_DDRREG & CORE_PIN16_BITMASK)) CORE_PIN16_CONFIG = CONFIG_NOPULLUP;
 		}
 		if (!(val & (1<<3))) {
-			digitalWriteFast(17, LOW);
+			digitalWriteFast(17, 0);
 			if (!(CORE_PIN17_DDRREG & CORE_PIN17_BITMASK)) CORE_PIN17_CONFIG = CONFIG_NOPULLUP;
 		}
 		if (!(val & (1<<4))) {
-			digitalWriteFast(18, LOW);
+			digitalWriteFast(18, 0);
 			if (!(CORE_PIN18_DDRREG & CORE_PIN18_BITMASK)) CORE_PIN18_CONFIG = CONFIG_NOPULLUP;
 		}
 		if (!(val & (1<<5))) {
-			digitalWriteFast(19, LOW);
+			digitalWriteFast(19, 0);
 			if (!(CORE_PIN19_DDRREG & CORE_PIN19_BITMASK)) CORE_PIN19_CONFIG = CONFIG_NOPULLUP;
 		}
 		return *this;
