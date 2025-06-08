@@ -32,6 +32,8 @@
 #define pins_macros_for_arduino_compatibility_h
 
 #include <stdint.h>
+#include <avr/pgmspace.h>
+#include "core_pins.h"
 
 // A0-A9 are always digital 14-23, for Arduino compatibility
 #define PIN_A0  (14)
