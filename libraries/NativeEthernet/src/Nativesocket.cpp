@@ -354,10 +354,10 @@ uint16_t EthernetClass::socketBufferData(uint8_t s, uint16_t offset, const uint8
 {
 	//Serial.printf("  bufferData, offset=%d, len=%d\n", offset, len);
     uint8_t* _buf = (uint8_t*)buf;
-    if(offset + len >= FNET_SOCKET_DEFAULT_SIZE){
-        fnet_memcpy(socket_buf_transmit[s] + offset, _buf, FNET_SOCKET_DEFAULT_SIZE - offset);
-        socket_buf_len[s] += FNET_SOCKET_DEFAULT_SIZE - offset;
-        return FNET_SOCKET_DEFAULT_SIZE - offset;
+    if(offset + len >= socket_size){
+        fnet_memcpy(socket_buf_transmit[s] + offset, _buf, socket_size - offset);
+        socket_buf_len[s] += socket_size - offset;
+        return socket_size - offset;
     }
     else{
         fnet_memcpy(socket_buf_transmit[s] + offset, _buf, len);

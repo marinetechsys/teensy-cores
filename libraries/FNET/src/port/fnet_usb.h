@@ -17,9 +17,6 @@
 
 //#if !defined(ARDUINO_TEENSY41)
 
-#if defined(__cplusplus)
-extern "C" {
-#endif
 
 /************************************************************************
  *     Function Prototypes
@@ -40,7 +37,13 @@ void fnet_usb_multicast_leave(fnet_netif_t *netif, fnet_mac_addr_t multicast_add
 
 fnet_return_t _fnet_usb_phy_read(fnet_netif_t *netif, fnet_uint32_t reg_addr, fnet_uint16_t *data);
 fnet_return_t _fnet_usb_phy_write(fnet_netif_t *netif, fnet_uint32_t reg_addr, fnet_uint16_t data);
+#if defined(__cplusplus)
+extern "C" {
+#endif
 fnet_uint32_t fnet_usb_crc_hash(fnet_mac_addr_t multicast_addr);
+#if defined(__cplusplus)
+}
+#endif
 void fnet_usb_multicast_join(fnet_netif_t *netif, fnet_mac_addr_t multicast_addr);
 void fnet_usb_multicast_leave(fnet_netif_t *netif, fnet_mac_addr_t multicast_addr);
 
@@ -48,53 +51,43 @@ void fnet_usb_multicast_leave(fnet_netif_t *netif, fnet_mac_addr_t multicast_add
 void fnet_usb_stop(fnet_netif_t *netif);
 void fnet_usb_resume(fnet_netif_t *netif);
 
-extern void (*_handleGetMACAddress)(fnet_mac_addr_t * hw_addr);
-static void setHandleGetMACAddress(void (*fptr)(fnet_mac_addr_t * hw_addr)) __attribute__((unused));
-static void setHandleGetMACAddress(void (*fptr)(fnet_mac_addr_t * hw_addr)) {
+void (*_handleGetMACAddress)(fnet_mac_addr_t * hw_addr);
+void setHandleGetMACAddress(void (*fptr)(fnet_mac_addr_t * hw_addr)) {
     _handleGetMACAddress = fptr;
 };
-extern void (*_handleSetMACAddress)(uint8_t * hw_addr);
-static void setHandleSetMACAddress(void (*fptr)(uint8_t * hw_addr)) __attribute__((unused));
-static void setHandleSetMACAddress(void (*fptr)(uint8_t * hw_addr)) {
+void (*_handleSetMACAddress)(uint8_t * hw_addr);
+void setHandleSetMACAddress(void (*fptr)(uint8_t * hw_addr)) {
     _handleSetMACAddress = fptr;
 };
-extern void (*_handleMulticastJoin)(fnet_netif_t *netif, fnet_mac_addr_t multicast_addr);
-static void setHandleMulticastJoin(void (*fptr)(fnet_netif_t *netif, fnet_mac_addr_t multicast_addr)) __attribute__((unused));
-static void setHandleMulticastJoin(void (*fptr)(fnet_netif_t *netif, fnet_mac_addr_t multicast_addr)) {
+void (*_handleMulticastJoin)(fnet_netif_t *netif, fnet_mac_addr_t multicast_addr);
+void setHandleMulticastJoin(void (*fptr)(fnet_netif_t *netif, fnet_mac_addr_t multicast_addr)) {
     _handleMulticastJoin = fptr;
 };
-extern void (*_handleMulticastLeave)(fnet_netif_t *netif, fnet_mac_addr_t multicast_addr);
-static void setHandleMulticastLeave(void (*fptr)(fnet_netif_t *netif, fnet_mac_addr_t multicast_addr)) __attribute__((unused));
-static void setHandleMulticastLeave(void (*fptr)(fnet_netif_t *netif, fnet_mac_addr_t multicast_addr)) {
+void (*_handleMulticastLeave)(fnet_netif_t *netif, fnet_mac_addr_t multicast_addr);
+void setHandleMulticastLeave(void (*fptr)(fnet_netif_t *netif, fnet_mac_addr_t multicast_addr)) {
     _handleMulticastLeave = fptr;
 };
-extern void (*_handlePHYRead)(fnet_uint32_t reg_addr, fnet_uint16_t *data);
-static void setHandlePHYRead(void (*fptr)(fnet_uint32_t reg_addr, fnet_uint16_t *data)) __attribute__((unused));
-static void setHandlePHYRead(void (*fptr)(fnet_uint32_t reg_addr, fnet_uint16_t *data)) {
+void (*_handlePHYRead)(fnet_uint32_t reg_addr, fnet_uint16_t *data);
+void setHandlePHYRead(void (*fptr)(fnet_uint32_t reg_addr, fnet_uint16_t *data)) {
     _handlePHYRead = fptr;
 };
-extern void (*_handlePHYWrite)(fnet_uint32_t reg_addr, fnet_uint16_t data);
-static void setHandlePHYWrite(void (*fptr)(fnet_uint32_t reg_addr, fnet_uint16_t data)) __attribute__((unused));
-static void setHandlePHYWrite(void (*fptr)(fnet_uint32_t reg_addr, fnet_uint16_t data)) {
+void (*_handlePHYWrite)(fnet_uint32_t reg_addr, fnet_uint16_t data);
+void setHandlePHYWrite(void (*fptr)(fnet_uint32_t reg_addr, fnet_uint16_t data)) {
     _handlePHYWrite = fptr;
 };
-extern void (*_handleOutput)(fnet_netif_t *netif, fnet_netbuf_t *nb);
-static void setHandleOutput(void (*fptr)(fnet_netif_t *netif, fnet_netbuf_t *nb)) __attribute__((unused));
-static void setHandleOutput(void (*fptr)(fnet_netif_t *netif, fnet_netbuf_t *nb)) {
+void (*_handleOutput)(fnet_netif_t *netif, fnet_netbuf_t *nb);
+void setHandleOutput(void (*fptr)(fnet_netif_t *netif, fnet_netbuf_t *nb)) {
     _handleOutput = fptr;
 };
-extern void (*_handleStatistics)(struct fnet_netif *netif, struct fnet_netif_statistics * statistics);
-static void setHandleStatistics(void (*fptr)(struct fnet_netif *netif, struct fnet_netif_statistics * statistics)) __attribute__((unused));
-static void setHandleStatistics(void (*fptr)(struct fnet_netif *netif, struct fnet_netif_statistics * statistics)) {
+void (*_handleStatistics)(struct fnet_netif *netif, struct fnet_netif_statistics * statistics);
+void setHandleStatistics(void (*fptr)(struct fnet_netif *netif, struct fnet_netif_statistics * statistics)) {
     _handleStatistics = fptr;
 };
-extern fnet_bool_t (*_handleIsConnected)();
-static void setHandleIsConnected(fnet_bool_t (*fptr)()) __attribute__((unused));
-static void setHandleIsConnected(fnet_bool_t (*fptr)()) {
+fnet_bool_t (*_handleIsConnected)();
+void setHandleIsConnected(fnet_bool_t (*fptr)()) {
     _handleIsConnected = fptr;
 };
 extern fnet_netif_t fnet_usb0_if;
-
 #define FNET_CPU_USB0_IF ((fnet_netif_desc_t)(&fnet_usb0_if))
 #if !defined(ARDUINO_TEENSY41)
 #define FNET_CPU_ETH0_IF FNET_CPU_USB0_IF
@@ -102,10 +95,6 @@ extern fnet_netif_t fnet_usb0_if;
 
 #define FNET_CPU_DATA_MEMORY_BARRIER    FNET_COMP_ASM("DMB")
 fnet_netif_t * fnet_usb_get_netif();
-
-#if defined(__cplusplus)
-}
-#endif
 
 //#endif // !ARDUINO_TEENSY41
 #endif /* fnet_usb_eth_h */

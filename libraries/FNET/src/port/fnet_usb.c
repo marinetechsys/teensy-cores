@@ -7,17 +7,6 @@
 
 //#if !defined(ARDUINO_TEENSY41)
 
-void (*_handleGetMACAddress)(fnet_mac_addr_t * hw_addr);
-void (*_handleSetMACAddress)(uint8_t * hw_addr);
-void (*_handleMulticastJoin)(fnet_netif_t *netif, fnet_mac_addr_t multicast_addr);
-void (*_handleMulticastLeave)(fnet_netif_t *netif, fnet_mac_addr_t multicast_addr);
-void (*_handlePHYRead)(fnet_uint32_t reg_addr, fnet_uint16_t *data);
-void (*_handlePHYWrite)(fnet_uint32_t reg_addr, fnet_uint16_t data);
-void (*_handleOutput)(fnet_netif_t *netif, fnet_netbuf_t *nb);
-void (*_handleStatistics)(struct fnet_netif *netif, struct fnet_netif_statistics * statistics);
-fnet_bool_t (*_handleIsConnected)();
-
-
 /************************************************************************
  * NAME: inits
  *

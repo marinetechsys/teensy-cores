@@ -31,7 +31,7 @@
 #include <Arduino.h>
 #include "EventResponder.h"
 
-uint8_t yield_active_check_flags = 0;
+volatile uint8_t yield_active_check_flags = 0;
 
 
 void yield(void) __attribute__ ((weak));
