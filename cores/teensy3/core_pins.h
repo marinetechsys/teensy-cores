@@ -2333,7 +2333,7 @@ void _restart_Teensyduino_(void) __attribute__((noreturn));
 
 // Define a set of flags to know which things yield should check when called.
 // Probably should be in a better spot.  
-extern uint8_t yield_active_check_flags;
+extern volatile uint8_t yield_active_check_flags;
 
 #define YIELD_CHECK_USB_SERIAL 		0x1   	// check the USB for Serial.available()
 #define YIELD_CHECK_HARDWARE_SERIAL 0x2		// check Hardware Serial ports available
