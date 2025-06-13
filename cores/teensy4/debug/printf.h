@@ -16,7 +16,7 @@
 extern "C" {
 #endif
 void printf_debug_init(void);
-void printf_debug(const char *format, ...);
+int printf_debug(const char *format, ...);
 #ifdef __cplusplus
 }
 #endif

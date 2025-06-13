@@ -2,8 +2,9 @@
 #include "wiring.h"
 #include "usb_dev.h"
 #include "avr/pgmspace.h"
-#include "smalloc.h"
+#include "tlsf_alloc.h"
 #include <string.h>
+#include <unwind.h>
 
 #include "debug/printf.h"
 
@@ -48,9 +49,21 @@ extern uint32_t set_arm_clock(uint32_t frequency); // clockspeed.c
 extern void __libc_init_array(void); // C++ standard library
 
 uint8_t external_psram_size = 0;
-#ifdef ARDUINO_TEENSY41
-struct smalloc_pool extmem_smalloc_pool;
-#endif
+
+/// This struct definition mimics the internal structures of libgcc in
+/// arm-none-eabi binary. It's not portable and might break in the future.
+struct core_regs {
+  unsigned r[16];
+};
+
+/// This struct definition mimics the internal structures of libgcc in
+/// arm-none-eabi binary. It's not portable and might break in the future.
+typedef struct {
+  unsigned demand_save_flags;
+  struct core_regs core;
+} phase2_vrs;
+
+uint32_t g_trace_lr;
 
 extern int main (void);
 FLASHMEM void startup_default_early_hook(void) {}
@@ -191,9 +204,9 @@ static void ResetHandler2(void)
 	}
 	SNVS_HPCR |= SNVS_HPCR_RTC_EN | SNVS_HPCR_HP_TS;
 
-#if defined ARDUINO_TEENSY41 && !defined TEENSY_NO_EXTRAM
-	printf("before configure_external_ram()\r\n");
-	configure_external_ram();
+
+#if defined ARDUINO_TEENSY41
+    tlsf_heap_init();
 #endif
 	analog_init();
 	pwm_init();
@@ -518,13 +531,14 @@ FLASHMEM static void configure_external_ram()
 		__asm__ volatile("isb" ::: "memory");
 		// TODO: zero uninitialized EXTMEM variables
 		// TODO: copy from flash to initialize EXTMEM variables
+        /*
 		sm_set_pool(&extmem_smalloc_pool, &_extram_end,
 			external_psram_size * 0x100000 -
 			((uint32_t)&_extram_end - (uint32_t)&_extram_start),
 			1, NULL);
+        */
 	} else {
 		// No PSRAM
-		memset(&extmem_smalloc_pool, 0, sizeof(extmem_smalloc_pool));
 	}
 }
 
@@ -591,6 +605,29 @@ FLASHMEM static void reset_PFD()
 }
 
 extern void usb_isr(void);
+
+FLASHMEM _Unwind_Reason_Code trace_fcn(_Unwind_Context* ctx, void* depth) {
+  int* p_depth { static_cast<int*>(depth) };
+
+  const auto ip { _Unwind_GetIP(ctx) };
+  const auto start { _Unwind_GetRegionStart(ctx) };
+  EXC_PRINTF(PSTR("\t#%d"), *p_depth);
+
+  EXC_PRINTF(PSTR(":\t0x%04x"), *p_depth ? (ip - 1) & ~1 : ip);
+  EXC_PRINTF(PSTR(" [0x%04x]\r\n"), start);
+
+  if (g_trace_lr) {
+    _Unwind_SetGR(ctx, 14, g_trace_lr);
+    g_trace_lr = 0;
+  }
+
+  ++(*p_depth);
+  if (*p_depth == 32) {
+    return _URC_END_OF_STACK;
+  }
+
+  return _URC_NO_REASON;
+}
 
 // Stack frame
 //  xPSR

@@ -13,7 +13,7 @@ void putchar_debug(char c);
 static void puint_debug(unsigned int num);
 
 
-FLASHMEM void printf_debug(const char *format, ...)
+FLASHMEM int printf_debug(const char *format, ...)
 {
 	va_list args;
 	unsigned int val;
@@ -56,6 +56,7 @@ FLASHMEM void printf_debug(const char *format, ...)
 		}
 	}
 	va_end(args);
+        return 0;
 }
 
 FLASHMEM static void puint_debug(unsigned int num)
