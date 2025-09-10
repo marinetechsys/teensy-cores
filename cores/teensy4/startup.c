@@ -20,6 +20,9 @@ extern unsigned long _sexidx;
 extern unsigned long _eexidx;
 extern unsigned long _sbss;
 extern unsigned long _ebss;
+extern unsigned long _stack_end;
+extern unsigned long __bss_dma_start__;
+extern unsigned long __bss_dma_end__;
 extern unsigned long _flexram_bank_config;
 extern unsigned long _estack;
 extern unsigned long _extram_start;
@@ -137,6 +140,7 @@ static void ResetHandler2(void)
 	memory_copy(&_sdata, &_sdataload, &_edata);
 	memory_copy(&_sexidx, &_sexidxload, &_eexidx);
 	memory_clear(&_sbss, &_ebss);
+	memory_clear(&__bss_dma_start__, &__bss_dma_end__);
 	__asm volatile ("dsb st" ::: "memory");
 
 	// enable FPU
@@ -334,7 +338,7 @@ FLASHMEM static void configure_cache(void)
 	SCB_MPU_RBAR = 0x20000000 | REGION(i++); // DTCM
 	SCB_MPU_RASR = MEM_NOCACHE | READWRITE | NOEXEC | SIZE_512K;
 	
-	SCB_MPU_RBAR = ((uint32_t)&_estack - 8192) | REGION(i++); // trap stack overflow
+	SCB_MPU_RBAR = ((uint32_t)&_stack_end) | REGION(i++); // trap stack overflow
 	SCB_MPU_RASR = SCB_MPU_RASR_TEX(0) | NOACCESS | NOEXEC | SIZE_32B;
 
 	SCB_MPU_RBAR = 0x20200000 | REGION(i++); // RAM (AXI bus)
@@ -347,7 +351,7 @@ FLASHMEM static void configure_cache(void)
 	SCB_MPU_RASR = MEM_CACHE_WBWA | READONLY | SIZE_16M;
 
 	SCB_MPU_RBAR = 0x70000000 | REGION(i++); // FlexSPI2
-	SCB_MPU_RASR = MEM_CACHE_WT | READWRITE | NOEXEC | SIZE_16M;
+	SCB_MPU_RASR = MEM_CACHE_WBWA | READWRITE | NOEXEC | SIZE_16M;
 
 	SCB_MPU_RBAR = 0x80000000 | REGION(i++); // SEMC: SDRAM, NAND, SRAM, etc
 	SCB_MPU_RASR = MEM_CACHE_WBWA | READWRITE | NOEXEC | SIZE_1G;
@@ -605,29 +609,6 @@ FLASHMEM static void reset_PFD()
 }
 
 extern void usb_isr(void);
-
-FLASHMEM _Unwind_Reason_Code trace_fcn(_Unwind_Context* ctx, void* depth) {
-  int* p_depth { static_cast<int*>(depth) };
-
-  const auto ip { _Unwind_GetIP(ctx) };
-  const auto start { _Unwind_GetRegionStart(ctx) };
-  EXC_PRINTF(PSTR("\t#%d"), *p_depth);
-
-  EXC_PRINTF(PSTR(":\t0x%04x"), *p_depth ? (ip - 1) & ~1 : ip);
-  EXC_PRINTF(PSTR(" [0x%04x]\r\n"), start);
-
-  if (g_trace_lr) {
-    _Unwind_SetGR(ctx, 14, g_trace_lr);
-    g_trace_lr = 0;
-  }
-
-  ++(*p_depth);
-  if (*p_depth == 32) {
-    return _URC_END_OF_STACK;
-  }
-
-  return _URC_NO_REASON;
-}
 
 // Stack frame
 //  xPSR

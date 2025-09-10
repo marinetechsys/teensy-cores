@@ -4,12 +4,11 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <debug/printf.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-extern int printf_debug(const char *format, ...);
 
 // ---- linker symbols ----
 
