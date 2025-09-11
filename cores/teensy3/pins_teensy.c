@@ -144,6 +144,12 @@ const struct digital_pin_bitband_and_config_table_struct digital_pin_to_info_PGM
 static void dummy_isr() {};
 
 typedef void (*voidFuncPtr)(void);
+typedef void (*voidFuncPtrCtx)(void*);
+typedef struct {
+    voidFuncPtrCtx fn;
+    void *ctx;
+} isr_entry_t;
+static void dummy_isr_ctx(void *ctx) { (void)ctx; dummy_isr(); }
 #if defined(KINETISK)
 #ifdef NO_PORT_ISR_FASTRUN
 static void port_A_isr(void);
@@ -159,16 +165,16 @@ static void port_D_isr(void) __attribute__ ((section(".fastrun"), noinline, nocl
 static void port_E_isr(void) __attribute__ ((section(".fastrun"), noinline, noclone ));
 #endif
 
-voidFuncPtr isr_table_portA[CORE_MAX_PIN_PORTA+1] = { [0 ... CORE_MAX_PIN_PORTA] = dummy_isr };
-voidFuncPtr isr_table_portB[CORE_MAX_PIN_PORTB+1] = { [0 ... CORE_MAX_PIN_PORTB] = dummy_isr };
-voidFuncPtr isr_table_portC[CORE_MAX_PIN_PORTC+1] = { [0 ... CORE_MAX_PIN_PORTC] = dummy_isr };
-voidFuncPtr isr_table_portD[CORE_MAX_PIN_PORTD+1] = { [0 ... CORE_MAX_PIN_PORTD] = dummy_isr };
-voidFuncPtr isr_table_portE[CORE_MAX_PIN_PORTE+1] = { [0 ... CORE_MAX_PIN_PORTE] = dummy_isr };
+isr_entry_t isr_table_portA[CORE_MAX_PIN_PORTA+1] = { [0 ... CORE_MAX_PIN_PORTA] = { dummy_isr_ctx, NULL } };
+isr_entry_t isr_table_portB[CORE_MAX_PIN_PORTB+1] = { [0 ... CORE_MAX_PIN_PORTB] = { dummy_isr_ctx, NULL } };
+isr_entry_t isr_table_portC[CORE_MAX_PIN_PORTC+1] = { [0 ... CORE_MAX_PIN_PORTC] = { dummy_isr_ctx, NULL } };
+isr_entry_t isr_table_portD[CORE_MAX_PIN_PORTD+1] = { [0 ... CORE_MAX_PIN_PORTD] = { dummy_isr_ctx, NULL } };
+isr_entry_t isr_table_portE[CORE_MAX_PIN_PORTE+1] = { [0 ... CORE_MAX_PIN_PORTE] = { dummy_isr_ctx, NULL } };
 
 // The Pin Config Register is used to look up the correct interrupt table
 // for the corresponding port.
-static inline voidFuncPtr* getIsrTable(volatile uint32_t *config) {
-	voidFuncPtr* isr_table = NULL;
+static inline isr_entry_t* getIsrTable(volatile uint32_t *config) {
+	isr_entry_t* isr_table = NULL;
 	if(&PORTA_PCR0 <= config && config <= &PORTA_PCR31) isr_table = isr_table_portA;
 	else if(&PORTB_PCR0 <= config && config <= &PORTB_PCR31) isr_table = isr_table_portB;
 	else if(&PORTC_PCR0 <= config && config <= &PORTC_PCR31) isr_table = isr_table_portC;
@@ -184,7 +190,7 @@ inline uint32_t getPinIndex(volatile uint32_t *config) {
 	return (v % 128) / 4;
 }
 #elif defined(KINETISL)
-volatile static voidFuncPtr intFunc[CORE_NUM_DIGITAL] = { [0 ... CORE_NUM_DIGITAL-1] = dummy_isr };
+volatile static isr_entry_t intFunc[CORE_NUM_DIGITAL] = { [0 ... CORE_NUM_DIGITAL-1] = { dummy_isr_ctx, NULL } };
 static void porta_interrupt(void);
 static void portcd_interrupt(void);
 #endif
@@ -194,7 +200,15 @@ void attachInterruptVector(enum IRQ_NUMBER_t irq, void (*function)(void))
 	_VectorsRam[irq + 16] = function;
 }
 
+static void call_void_handler(void *ctx) { ((void (*)(void))ctx)(); }
+
 void attachInterrupt(uint8_t pin, void (*function)(void), int mode)
+{
+    // Backward-compatible wrapper
+    attachInterruptContext(pin, (voidFuncPtrCtx)call_void_handler, mode, (void*)function);
+}
+
+void attachInterruptContext(uint8_t pin, void (*function)(void*), int mode, void *context)
 {
 	volatile uint32_t *config;
 	uint32_t cfg, mask;
@@ -221,14 +235,15 @@ void attachInterrupt(uint8_t pin, void (*function)(void), int mode)
 	attachInterruptVector(IRQ_PORTC, port_C_isr);
 	attachInterruptVector(IRQ_PORTD, port_D_isr);
 	attachInterruptVector(IRQ_PORTE, port_E_isr);
-	voidFuncPtr* isr_table = getIsrTable(config);
+	isr_entry_t* isr_table = getIsrTable(config);
 	if(!isr_table) return;
 	uint32_t pin_index = getPinIndex(config);
 	__disable_irq();
 	cfg = *config;
 	cfg &= ~0x000F0000;		// disable any previous interrupt
 	*config = cfg;
-	isr_table[pin_index] = function;	// set the function pointer
+	isr_table[pin_index].fn = function;
+	isr_table[pin_index].ctx = context;
 	cfg |= mask;
 	*config = cfg;			// enable the new interrupt
 	__enable_irq();
@@ -239,7 +254,8 @@ void attachInterrupt(uint8_t pin, void (*function)(void), int mode)
 	cfg = *config;
 	cfg &= ~0x000F0000;		// disable any previous interrupt
 	*config = cfg;
-	intFunc[pin] = function;	// set the function pointer
+	intFunc[pin].fn = function;
+	intFunc[pin].ctx = context;
 	cfg |= mask;
 	*config = cfg;			// enable the new interrupt
 	__enable_irq();
@@ -252,17 +268,19 @@ void detachInterrupt(uint8_t pin)
 
 	config = portConfigRegister(pin);
 #if defined(KINETISK)
-	voidFuncPtr* isr_table = getIsrTable(config);
+	isr_entry_t* isr_table = getIsrTable(config);
 	if(!isr_table) return;
 	uint32_t pin_index = getPinIndex(config);
 	__disable_irq();
 	*config = ((*config & ~0x000F0000) | 0x01000000);
-	isr_table[pin_index] = dummy_isr;
+	isr_table[pin_index].fn = dummy_isr_ctx;
+	isr_table[pin_index].ctx = NULL;
 	__enable_irq();
 #elif defined(KINETISL)
 	__disable_irq();
 	*config = ((*config & ~0x000F0000) | 0x01000000);
-	intFunc[pin] = dummy_isr;
+	intFunc[pin].fn = dummy_isr_ctx;
+	intFunc[pin].ctx = NULL;
 	__enable_irq();
 #endif
 }
@@ -273,17 +291,18 @@ typedef void (*voidFuncPtr)(void);
 // Using CTZ instead of CLZ is faster, since it allows more efficient bit
 // clearing and fast indexing into the pin ISR table.
 #define PORT_ISR_FUNCTION_CLZ(port_name) \
-	static void port_ ## port_name ## _isr(void) {            \
-		uint32_t isfr = PORT ## port_name ##_ISFR;            \
-		PORT ## port_name ##_ISFR = isfr;                     \
-		voidFuncPtr* isr_table = isr_table_port ## port_name; \
-		uint32_t bit_nr;                                      \
-		while(isfr) {                                         \
-			bit_nr = __builtin_ctz(isfr);                     \
-			isr_table[bit_nr]();                              \
-			isfr = isfr & (isfr-1);                           \
-			if(!isfr) return;                                 \
-		}                                                     \
+	static void port_ ## port_name ## _isr(void) {              \
+		uint32_t isfr = PORT ## port_name ##_ISFR;              \
+		PORT ## port_name ##_ISFR = isfr;                       \
+		isr_entry_t* isr_table = isr_table_port ## port_name;   \
+		uint32_t bit_nr;                                        \
+		while(isfr) {                                           \
+			bit_nr = __builtin_ctz(isfr);                       \
+			isr_entry_t *e = &isr_table[bit_nr];                \
+			e->fn(e->ctx);                                     \
+			isfr = isfr & (isfr-1);                             \
+			if(!isfr) return;                                   \
+		}                                                       \
 	}
 // END PORT_ISR_FUNCTION_CLZ
 
@@ -297,8 +316,8 @@ PORT_ISR_FUNCTION_CLZ(E)
 // Kinetis L (Teensy LC) is based on Cortex M0 and doesn't have hardware
 // support for CLZ.
 
-#define DISPATCH_PIN_ISR(pin_nr) { voidFuncPtr pin_isr = intFunc[pin_nr]; \
-                                   if(isfr & CORE_PIN ## pin_nr ## _BITMASK) pin_isr(); }
+#define DISPATCH_PIN_ISR(pin_nr) { isr_entry_t pin_isr = intFunc[pin_nr]; \
+                                   if(isfr & CORE_PIN ## pin_nr ## _BITMASK) pin_isr.fn(pin_isr.ctx); }
 
 static void porta_interrupt(void)
 {
