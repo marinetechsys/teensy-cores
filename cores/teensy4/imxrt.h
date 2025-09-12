@@ -10224,7 +10224,7 @@ __attribute__((always_inline, unused))
 static inline void arm_dcache_flush(void *addr, uint32_t size)
 {
 	// Guard against null or zero-length requests
-	if (addr == NULL || size == 0) return;
+	if (addr == (void*)0 || size == 0) return;
 
 	uint32_t a = (uint32_t)addr;
 	uint32_t start = a & 0xFFFFFFE0; // 32-byte aligned start
@@ -10271,7 +10271,7 @@ __attribute__((always_inline, unused))
 static inline void arm_dcache_delete(void *addr, uint32_t size)
 {
 	// Guard against null or zero-length requests
-	if (addr == NULL || size == 0) return;
+	if (addr == (void*)0 || size == 0) return;
 
 	uint32_t a = (uint32_t)addr;
 	uint32_t start = a & 0xFFFFFFE0; // 32-byte aligned start
@@ -10300,7 +10300,7 @@ __attribute__((always_inline, unused))
 static inline void arm_dcache_flush_delete(void *addr, uint32_t size)
 {
 	// Guard against null or zero-length requests
-	if (addr == NULL || size == 0) return;
+	if (addr == (void*)0 || size == 0) return;
 
 	uint32_t a = (uint32_t)addr;
 	uint32_t start = a & 0xFFFFFFE0; // 32-byte aligned start
