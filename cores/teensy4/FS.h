@@ -34,9 +34,17 @@
 
 #include <Arduino.h>
 
+#ifndef FILE_READ
 #define FILE_READ  0
+#endif
+
+#ifndef FILE_WRITE
 #define FILE_WRITE 1
+#endif
+
+#ifndef FILE_WRITE_BEGIN
 #define FILE_WRITE_BEGIN 2
+#endif
 
 enum SeekMode {
 	SeekSet = 0,
