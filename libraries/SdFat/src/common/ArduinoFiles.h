@@ -46,6 +46,7 @@ class PrintFile : public print_t, public BaseFile {
   using BaseFile::getWriteError;
   using BaseFile::read;
   using BaseFile::write;
+  using print_t::write;
   /** Write a single byte.
    * \param[in] b byte to write.
    * \return one for success.
@@ -66,6 +67,7 @@ class StreamFile : public stream_t, public BaseFile {
   using BaseFile::getWriteError;
   using BaseFile::read;
   using BaseFile::write;
+  using stream_t::write;
 
   StreamFile() {}
 
