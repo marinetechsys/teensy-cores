@@ -1189,43 +1189,6 @@ MBEDTLSFLASHMEM int mbedtls_mpi_mul_mpi( mbedtls_mpi *X, const mbedtls_mpi *A, c
 }
 
 /*
- * Baseline multiplication: X = A * B  (HAC 14.12)
- */
-MBEDTLSFLASHMEM int mbedtls_mpi_mul_mpi( mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *B )
-{
-    int ret;
-    size_t i, j;
-    mbedtls_mpi TA, TB;
-
-    mbedtls_mpi_init( &TA ); mbedtls_mpi_init( &TB );
-
-    if( X == A ) { MBEDTLS_MPI_CHK( mbedtls_mpi_copy( &TA, A ) ); A = &TA; }
-    if( X == B ) { MBEDTLS_MPI_CHK( mbedtls_mpi_copy( &TB, B ) ); B = &TB; }
-
-    for( i = A->n; i > 0; i-- )
-        if( A->p[i - 1] != 0 )
-            break;
-
-    for( j = B->n; j > 0; j-- )
-        if( B->p[j - 1] != 0 )
-            break;
-
-    MBEDTLS_MPI_CHK( mbedtls_mpi_grow( X, i + j ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_lset( X, 0 ) );
-
-    for( ; j > 0; j-- )
-        mpi_mul_hlp( i, A->p, X->p + j - 1, B->p[j - 1] );
-
-    X->s = A->s * B->s;
-
-cleanup:
-
-    mbedtls_mpi_free( &TB ); mbedtls_mpi_free( &TA );
-
-    return( ret );
-}
-
-/*
  * Baseline multiplication: X = A * b
  */
 MBEDTLSFLASHMEM int mbedtls_mpi_mul_int( mbedtls_mpi *X, const mbedtls_mpi *A, mbedtls_mpi_uint b )

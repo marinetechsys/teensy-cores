@@ -49,6 +49,8 @@
 #define FLASH_SECTORS  63
 #endif
 
+#pragma GCC push_options
+#pragma GCC optimize ("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
 
 #if E2END > (255*FLASH_SECTORS-1)
 #error "E2END is set larger than the maximum possible EEPROM size"
@@ -355,3 +357,5 @@ void eepromemu_flash_erase_64K_block(void *addr)
 	FLEXSPI_INTR = FLEXSPI_INTR_IPCMDDONE;
 	flash_wait();
 }
+
+#pragma GCC pop_options
