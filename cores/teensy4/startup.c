@@ -53,21 +53,6 @@ extern void __libc_init_array(void); // C++ standard library
 
 uint8_t external_psram_size = 0;
 
-/// This struct definition mimics the internal structures of libgcc in
-/// arm-none-eabi binary. It's not portable and might break in the future.
-struct core_regs {
-  unsigned r[16];
-};
-
-/// This struct definition mimics the internal structures of libgcc in
-/// arm-none-eabi binary. It's not portable and might break in the future.
-typedef struct {
-  unsigned demand_save_flags;
-  struct core_regs core;
-} phase2_vrs;
-
-uint32_t g_trace_lr;
-
 extern int main (void);
 FLASHMEM void startup_default_early_hook(void) {}
 void startup_early_hook(void)	__attribute__ ((weak, alias("startup_default_early_hook"), section(".flashmem")));
