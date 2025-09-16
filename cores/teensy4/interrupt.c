@@ -11,6 +11,9 @@
 #define ISR_INDEX   6
 #define EDGE_INDEX  7
 
+#pragma GCC push_options
+#pragma GCC optimize ("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+
 static void dummy_isr() {};
 typedef void (*voidFuncPtr)(void);
 typedef void (*voidFuncPtrCtx)(void*);
@@ -146,3 +149,5 @@ void detachInterrupt(uint8_t pin)
 	uint32_t mask = digitalPinToBitMask(pin);
 	gpio[IMR_INDEX] &= ~mask;
 }
+
+#pragma GCC pop_options
