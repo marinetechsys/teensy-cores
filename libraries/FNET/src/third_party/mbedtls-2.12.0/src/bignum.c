@@ -1120,63 +1120,72 @@ __attribute__ ((noinline))
 #endif
 MBEDTLSFLASHMEM void mpi_mul_hlp( size_t i, mbedtls_mpi_uint *s, mbedtls_mpi_uint *d, mbedtls_mpi_uint b )
 {
-    mbedtls_mpi_uint c = 0, t = 0;
+    // Portable C implementation to avoid inline assembly paths (MULADDC_*),
+    // which conflict with frame-pointer usage on ARM Thumb (r7).
+    mbedtls_mpi_uint carry = 0;
+    size_t k = 0;
 
-#if defined(MULADDC_HUIT)
-    for( ; i >= 8; i -= 8 )
+    // Accumulate per-limb: d[k] = d[k] + s[k]*b + carry
+    // Use 64-bit accumulator (valid when limb is 32-bit).
+    while (k < i)
     {
-        MULADDC_INIT
-        MULADDC_HUIT
-        MULADDC_STOP
+        unsigned long long acc =
+            (unsigned long long)s[k] * (unsigned long long)b +
+            (unsigned long long)d[k] +
+            (unsigned long long)carry;
+
+        d[k] = (mbedtls_mpi_uint)acc;
+        carry = (mbedtls_mpi_uint)(acc >> biL);
+        k++;
     }
 
-    for( ; i > 0; i-- )
+    // Propagate any remaining carry through higher limbs of d
+    while (carry != 0)
     {
-        MULADDC_INIT
-        MULADDC_CORE
-        MULADDC_STOP
+        unsigned long long acc =
+            (unsigned long long)d[k] + (unsigned long long)carry;
+
+        d[k] = (mbedtls_mpi_uint)acc;
+        carry = (mbedtls_mpi_uint)(acc >> biL);
+        k++;
     }
-#else /* MULADDC_HUIT */
-    for( ; i >= 16; i -= 16 )
-    {
-        MULADDC_INIT
-        MULADDC_CORE   MULADDC_CORE
-        MULADDC_CORE   MULADDC_CORE
-        MULADDC_CORE   MULADDC_CORE
-        MULADDC_CORE   MULADDC_CORE
+}
 
-        MULADDC_CORE   MULADDC_CORE
-        MULADDC_CORE   MULADDC_CORE
-        MULADDC_CORE   MULADDC_CORE
-        MULADDC_CORE   MULADDC_CORE
-        MULADDC_STOP
-    }
+/*
+ * Baseline multiplication: X = A * B  (HAC 14.12)
+ */
+MBEDTLSFLASHMEM int mbedtls_mpi_mul_mpi( mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *B )
+{
+    int ret;
+    size_t i, j;
+    mbedtls_mpi TA, TB;
 
-    for( ; i >= 8; i -= 8 )
-    {
-        MULADDC_INIT
-        MULADDC_CORE   MULADDC_CORE
-        MULADDC_CORE   MULADDC_CORE
+    mbedtls_mpi_init( &TA ); mbedtls_mpi_init( &TB );
 
-        MULADDC_CORE   MULADDC_CORE
-        MULADDC_CORE   MULADDC_CORE
-        MULADDC_STOP
-    }
+    if( X == A ) { MBEDTLS_MPI_CHK( mbedtls_mpi_copy( &TA, A ) ); A = &TA; }
+    if( X == B ) { MBEDTLS_MPI_CHK( mbedtls_mpi_copy( &TB, B ) ); B = &TB; }
 
-    for( ; i > 0; i-- )
-    {
-        MULADDC_INIT
-        MULADDC_CORE
-        MULADDC_STOP
-    }
-#endif /* MULADDC_HUIT */
+    for( i = A->n; i > 0; i-- )
+        if( A->p[i - 1] != 0 )
+            break;
 
-    t++;
+    for( j = B->n; j > 0; j-- )
+        if( B->p[j - 1] != 0 )
+            break;
 
-    do {
-        *d += c; c = ( *d < c ); d++;
-    }
-    while( c != 0 );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_grow( X, i + j ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_lset( X, 0 ) );
+
+    for( ; j > 0; j-- )
+        mpi_mul_hlp( i, A->p, X->p + j - 1, B->p[j - 1] );
+
+    X->s = A->s * B->s;
+
+    cleanup:
+
+        mbedtls_mpi_free( &TB ); mbedtls_mpi_free( &TA );
+
+    return( ret );
 }
 
 /*
@@ -2222,7 +2231,7 @@ MBEDTLSFLASHMEM int mbedtls_mpi_gen_prime( mbedtls_mpi *X, size_t nbits, int dh_
     while( 1 )
     {
         MBEDTLS_MPI_CHK( mbedtls_mpi_fill_random( X, n * ciL, f_rng, p_rng ) );
-        /* make sure generated number is at least (nbits-1)+0.5 bits (FIPS 186-4 §B.3.3 steps 4.4, 5.5) */
+        /* make sure generated number is at least (nbits-1)+0.5 bits (FIPS 186-4 ï¿½B.3.3 steps 4.4, 5.5) */
         if( X->p[n-1] < CEIL_MAXUINT_DIV_SQRT2 ) continue;
 
         k = n * biL;

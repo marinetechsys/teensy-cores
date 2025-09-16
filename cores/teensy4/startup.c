@@ -606,29 +606,6 @@ FLASHMEM static void reset_PFD()
 
 extern void usb_isr(void);
 
-FLASHMEM _Unwind_Reason_Code trace_fcn(_Unwind_Context* ctx, void* depth) {
-  int* p_depth { static_cast<int*>(depth) };
-
-  const auto ip { _Unwind_GetIP(ctx) };
-  const auto start { _Unwind_GetRegionStart(ctx) };
-  EXC_PRINTF(PSTR("\t#%d"), *p_depth);
-
-  EXC_PRINTF(PSTR(":\t0x%04x"), *p_depth ? (ip - 1) & ~1 : ip);
-  EXC_PRINTF(PSTR(" [0x%04x]\r\n"), start);
-
-  if (g_trace_lr) {
-    _Unwind_SetGR(ctx, 14, g_trace_lr);
-    g_trace_lr = 0;
-  }
-
-  ++(*p_depth);
-  if (*p_depth == 32) {
-    return _URC_END_OF_STACK;
-  }
-
-  return _URC_NO_REASON;
-}
-
 // Stack frame
 //  xPSR
 //  ReturnAddress
