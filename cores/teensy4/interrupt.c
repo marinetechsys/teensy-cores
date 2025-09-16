@@ -13,6 +13,11 @@
 
 static void dummy_isr() {};
 typedef void (*voidFuncPtr)(void);
+typedef void (*voidFuncPtrCtx)(void*);
+typedef struct {
+    voidFuncPtrCtx fn;
+    void *ctx;
+} isr_entry_t;
 
 // TODO: Use of Fast GPIO6 - GPIO9 probably breaks everything about attachInterrupt()
 
@@ -22,21 +27,23 @@ typedef void (*voidFuncPtr)(void);
 #define CORE_MAX_PIN_PORT3 31
 #define CORE_MAX_PIN_PORT4 31
 
-voidFuncPtr isr_table_gpio1[CORE_MAX_PIN_PORT1+1] = { [0 ... CORE_MAX_PIN_PORT1] = dummy_isr };
-voidFuncPtr isr_table_gpio2[CORE_MAX_PIN_PORT2+1] = { [0 ... CORE_MAX_PIN_PORT2] = dummy_isr };
-voidFuncPtr isr_table_gpio3[CORE_MAX_PIN_PORT3+1] = { [0 ... CORE_MAX_PIN_PORT3] = dummy_isr };
-voidFuncPtr isr_table_gpio4[CORE_MAX_PIN_PORT4+1] = { [0 ... CORE_MAX_PIN_PORT4] = dummy_isr };
+static void dummy_isr_ctx(void *ctx) { (void)ctx; dummy_isr(); }
+isr_entry_t isr_table_gpio1[CORE_MAX_PIN_PORT1+1] = { [0 ... CORE_MAX_PIN_PORT1] = { dummy_isr_ctx, NULL } };
+isr_entry_t isr_table_gpio2[CORE_MAX_PIN_PORT2+1] = { [0 ... CORE_MAX_PIN_PORT2] = { dummy_isr_ctx, NULL } };
+isr_entry_t isr_table_gpio3[CORE_MAX_PIN_PORT3+1] = { [0 ... CORE_MAX_PIN_PORT3] = { dummy_isr_ctx, NULL } };
+isr_entry_t isr_table_gpio4[CORE_MAX_PIN_PORT4+1] = { [0 ... CORE_MAX_PIN_PORT4] = { dummy_isr_ctx, NULL } };
 
 #if defined(__IMXRT1062__)
 FASTRUN static inline __attribute__((always_inline))
-inline void irq_anyport(volatile uint32_t *gpio, voidFuncPtr *table)
+inline void irq_anyport(volatile uint32_t *gpio, isr_entry_t *table)
 {
 	uint32_t status = gpio[ISR_INDEX] & gpio[IMR_INDEX];
 	if (status) {
 		gpio[ISR_INDEX] = status;
 		while (status) {
 			uint32_t index = __builtin_ctz(status);
-			table[index]();
+			isr_entry_t *e = &table[index];
+			e->fn(e->ctx);
 			status = status & ~(1 << index);
 			//status = status & (status - 1);
 		}
@@ -55,7 +62,15 @@ void irq_gpio6789(void)
 
 #endif
 
+static void call_void_handler(void *ctx) { ((void (*)(void))ctx)(); }
+
 void attachInterrupt(uint8_t pin, void (*function)(void), int mode)
+{
+    // Backward-compatible wrapper: call context version with trampoline
+    attachInterruptContext(pin, (voidFuncPtrCtx)call_void_handler, mode, (void*)function);
+}
+
+void attachInterruptContext(uint8_t pin, void (*function)(void*), int mode, void *context)
 {
 	if (pin >= CORE_NUM_DIGITAL) return;
 	//printf("attachInterrupt, pin=%u\n", pin);
@@ -64,13 +79,13 @@ void attachInterrupt(uint8_t pin, void (*function)(void), int mode)
 	volatile uint32_t *pad = portControlRegister(pin);
 	uint32_t mask = digitalPinToBitMask(pin);
 
-	voidFuncPtr *table;
+	isr_entry_t *table;
 
 #if defined(__IMXRT1062__)
 
 	switch((uint32_t)gpio) {
 		case (uint32_t)&GPIO6_DR:
-			table = isr_table_gpio1;
+		table = isr_table_gpio1;
 			break;
 		case (uint32_t)&GPIO7_DR:
 			table = isr_table_gpio2;
@@ -106,7 +121,8 @@ void attachInterrupt(uint8_t pin, void (*function)(void), int mode)
 	*pad |= IOMUXC_PAD_HYS;		// use hystersis avoid false trigger by slow signals
 	gpio[GDIR_INDEX] &= ~mask;	// pin to input mode
 	uint32_t index = __builtin_ctz(mask);
-	table[index] = function;
+	table[index].fn = function;
+	table[index].ctx = context;
 	if (mode == CHANGE) {
 		gpio[EDGE_INDEX] |= mask;
 	} else {

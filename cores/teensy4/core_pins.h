@@ -2362,6 +2362,8 @@ void analogWriteFrequency(uint8_t pin, float frequency);
 // Arduino boards, the first parameter should be specified as
 // digitalPinToInterrupt(pin), even though not required by Teensy.
 void attachInterrupt(uint8_t pin, void (*function)(void), int mode);
+// Context-aware attachInterrupt: C symbol implemented in core for C/C++ use
+void attachInterruptContext(uint8_t pin, void (*function)(void*), int mode, void *context);
 // Remove a previously configured attachInterrupt() function from a pin.
 void detachInterrupt(uint8_t pin);
 void _init_Teensyduino_internal_(void);
@@ -2534,7 +2536,6 @@ public:
 extern teensy3_clock_class Teensy3Clock;
 
 #endif // __cplusplus
-
 
 
 
