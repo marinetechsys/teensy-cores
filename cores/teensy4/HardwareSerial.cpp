@@ -617,6 +617,9 @@ size_t HardwareSerialIMXRT::write9bit(uint32_t c)
 	return 1;
 }
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void HardwareSerialIMXRT::IRQHandler()
 {
 	//digitalWrite(4, HIGH);
@@ -706,6 +709,7 @@ void HardwareSerialIMXRT::IRQHandler()
 	}
 	//digitalWrite(4, LOW);
 }
+#pragma GCC pop_options
 
 
 void HardwareSerialIMXRT::addToSerialEventsList() {

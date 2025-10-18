@@ -14,13 +14,18 @@ static float s_hot_ROOM, s_roomC_hotC;
 
 extern void unused_interrupt_vector(void); // startup.c
 
-FLASHMEM void Panic_Temp_isr(void) {
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
+
+void Panic_Temp_isr(void) {
   unused_interrupt_vector();
   //IOMUXC_GPR_GPR16 = 0x00000007;
   //SNVS_LPCR |= SNVS_LPCR_TOP; //Switch off now
   //asm volatile ("dsb":::"memory");
   //while (1) asm ("wfi");
 }
+#pragma GCC pop_options
 
 FLASHMEM void tempmon_init(void)
 {

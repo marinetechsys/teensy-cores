@@ -39,12 +39,14 @@
 #endif
 #define IRQ_PRIORITY  64  // 0 = highest priority, 255 = lowest
 
-
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void IRQHandler_Serial2()
 {
 	Serial2.IRQHandler();
 }
-
+#pragma GCC pop_options
 
 // Serial2
 static BUFTYPE tx_buffer2[SERIAL2_TX_BUFFER_SIZE];

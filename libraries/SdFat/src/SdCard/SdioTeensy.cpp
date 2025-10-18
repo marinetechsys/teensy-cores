@@ -279,6 +279,10 @@ inline bool setSdErrorCode(uint8_t code, uint32_t line) {
 }
 //==============================================================================
 // ISR
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
+
 static void sdIrs() {
   SDHC_IRQSIGEN = 0;
   m_irqstat = SDHC_IRQSTAT;
@@ -288,6 +292,8 @@ static void sdIrs() {
 #endif
   m_dmaBusy = false;
 }
+#pragma GCC pop_options
+
 //==============================================================================
 // GPIO and clock functions.
 #if defined(__MK64FX512__) || defined(__MK66FX1M0__)

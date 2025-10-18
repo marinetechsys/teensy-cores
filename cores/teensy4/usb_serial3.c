@@ -284,11 +284,16 @@ static void timer_config(void (*callback)(void), uint32_t microseconds);
 static void timer_start_oneshot();
 static void timer_stop();
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
+
 static void quadtimer_isr(void)
 {
 	TMR1_SCTRL3 = 0;
 	usb_serial3_flush_callback();
 }
+#pragma GCC pop_options
 
 static void timer_config(void (*callback)(void), uint32_t microseconds)
 {

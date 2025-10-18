@@ -92,7 +92,10 @@ void IntervalTimer::end() {
 #endif
 }
 
-//FASTRUN
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
+
 static void pit_isr()
 {
 #if 0
@@ -115,3 +118,4 @@ static void pit_isr()
 	if (funct_table[3] != nullptr && channel->TFLG) {channel->TFLG = 1;funct_table[3]();}
 #endif
 }
+#pragma GCC pop_options

@@ -226,6 +226,9 @@ FLASHMEM __attribute__((noinline)) void _reboot_Teensyduino_(void)
 	__builtin_unreachable();
 }
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 
 void usb_isr(void)
 {
@@ -368,6 +371,7 @@ void usb_isr(void)
 	}
 	__dsb();
 }
+#pragma GCC pop_options
 
 
 void usb_start_sof_interrupts(int interface)

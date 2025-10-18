@@ -341,11 +341,17 @@ void MillisTimer::runFromTimer()
 extern "C" volatile uint32_t systick_millis_count;
 extern "C" volatile uint32_t systick_cycle_count;
 extern "C" uint32_t systick_safe_read; // micros() synchronization
-extern "C" void systick_isr(void)
+extern "C" {
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
+void systick_isr(void)
 {
 	systick_cycle_count = ARM_DWT_CYCCNT;
 	systick_millis_count++;
 }
+#pragma GCC pop_options
+};
 
 // Entry to any ARM exception clears the LDREX exclusive access flag.
 // So we do not need to do anything with "systick_safe_read" here, as
@@ -354,11 +360,17 @@ extern "C" void systick_isr(void)
 // main program or lower priority interrupts.
 //  https://developer.arm.com/documentation/dui0646/c/the-cortex-m7-processor/memory-model/synchronization-primitives
 
-extern "C" void systick_isr_with_timer_events(void)
+extern "C" {
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
+void systick_isr_with_timer_events(void)
 {
 	systick_cycle_count = ARM_DWT_CYCCNT;
 	systick_millis_count++;
 	MillisTimer::runFromTimer();
+}
+#pragma GCC pop_options
 }
 
 extern "C" __attribute__((weak)) void setup_systick_with_timer_events()
