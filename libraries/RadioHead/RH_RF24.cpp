@@ -159,6 +159,9 @@ bool RH_RF24::init()
 }
 
 // C++ level interrupt handler for this instance
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void RH_RF24::handleInterrupt()
 {
     uint8_t status[8];
@@ -227,6 +230,8 @@ void RH_RF24::handleInterrupt()
 	}
     }
 }
+#pragma GCC pop_options
+
 
 // Check whether the latest received message is complete and uncorrupted
 void RH_RF24::validateRxBuf()
@@ -265,21 +270,36 @@ void RH_RF24::clearBuffer()
 // These are low level functions that call the interrupt handler for the correct
 // instance of RH_RF24.
 // 3 interrupts allows us to have 3 different devices
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void RH_INTERRUPT_ATTR RH_RF24::isr0()
 {
     if (_deviceForInterrupt[0])
 	_deviceForInterrupt[0]->handleInterrupt();
 }
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void RH_INTERRUPT_ATTR RH_RF24::isr1()
 {
     if (_deviceForInterrupt[1])
 	_deviceForInterrupt[1]->handleInterrupt();
 }
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void RH_INTERRUPT_ATTR RH_RF24::isr2()
 {
     if (_deviceForInterrupt[2])
 	_deviceForInterrupt[2]->handleInterrupt();
 }
+#pragma GCC pop_options
+
 
 bool RH_RF24::available()
 {

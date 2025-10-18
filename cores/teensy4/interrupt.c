@@ -11,9 +11,6 @@
 #define ISR_INDEX   6
 #define EDGE_INDEX  7
 
-#pragma GCC push_options
-#pragma GCC optimize ("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
-
 static void dummy_isr() {};
 typedef void (*voidFuncPtr)(void);
 typedef void (*voidFuncPtrCtx)(void*);
@@ -37,8 +34,10 @@ isr_entry_t isr_table_gpio3[CORE_MAX_PIN_PORT3+1] = { [0 ... CORE_MAX_PIN_PORT3]
 isr_entry_t isr_table_gpio4[CORE_MAX_PIN_PORT4+1] = { [0 ... CORE_MAX_PIN_PORT4] = { dummy_isr_ctx, NULL } };
 
 #if defined(__IMXRT1062__)
-FASTRUN static inline __attribute__((always_inline))
-inline void irq_anyport(volatile uint32_t *gpio, isr_entry_t *table)
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
+static void irq_anyport(volatile uint32_t *gpio, isr_entry_t *table)
 {
 	uint32_t status = gpio[ISR_INDEX] & gpio[IMR_INDEX];
 	if (status) {
@@ -52,8 +51,11 @@ inline void irq_anyport(volatile uint32_t *gpio, isr_entry_t *table)
 		}
 	}
 }
+#pragma GCC pop_options
 
-FASTRUN
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void irq_gpio6789(void)
 {
 	irq_anyport(&GPIO6_DR, isr_table_gpio1);
@@ -62,6 +64,7 @@ void irq_gpio6789(void)
 	irq_anyport(&GPIO9_DR, isr_table_gpio4);
 	asm volatile ("dsb":::"memory");
 }
+#pragma GCC pop_options
 
 #endif
 
@@ -149,5 +152,3 @@ void detachInterrupt(uint8_t pin)
 	uint32_t mask = digitalPinToBitMask(pin);
 	gpio[IMR_INDEX] &= ~mask;
 }
-
-#pragma GCC pop_options

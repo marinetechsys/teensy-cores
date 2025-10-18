@@ -190,6 +190,9 @@ bool RH_MRF89::printRegisters()
 // Only one of the several interrupt lines (IRQ1) from the RFM95 needs to be
 // connnected to the processor.
 // We use this to get CRCOK and TXDONE  interrupts
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void RH_MRF89::handleInterrupt()
 {
 //    Serial.println("I");
@@ -234,25 +237,42 @@ void RH_MRF89::handleInterrupt()
 	    setModeIdle(); // Got one 
     }
 }
+#pragma GCC pop_options
+
 
 // These are low level functions that call the interrupt handler for the correct
 // instance of RH_MRF89.
 // 3 interrupts allows us to have 3 different devices
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void RH_INTERRUPT_ATTR RH_MRF89::isr0()
 {
     if (_deviceForInterrupt[0])
 	_deviceForInterrupt[0]->handleInterrupt();
 }
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void RH_INTERRUPT_ATTR RH_MRF89::isr1()
 {
     if (_deviceForInterrupt[1])
 	_deviceForInterrupt[1]->handleInterrupt();
 }
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void RH_INTERRUPT_ATTR RH_MRF89::isr2()
 {
     if (_deviceForInterrupt[2])
 	_deviceForInterrupt[2]->handleInterrupt();
 }
+#pragma GCC pop_options
+
 
 uint8_t RH_MRF89::spiReadRegister(uint8_t reg)
 {

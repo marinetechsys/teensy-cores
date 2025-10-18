@@ -219,7 +219,7 @@ public:
 	static void isrEnc2();
 	static void isrEnc3();
 	static void isrEnc4();
-	static inline void checkAndProcessInterrupt(uint8_t index);
+	static void checkAndProcessInterrupt(uint8_t index);
 	
 	//counters
 	static uint32_t homeCounter;

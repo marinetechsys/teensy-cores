@@ -199,6 +199,9 @@ bool RH_RF22::init()
 }
 
 // C++ level interrupt handler for this instance
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void RH_RF22::handleInterrupt()
 {
     uint8_t _lastInterruptFlags[2];
@@ -317,6 +320,8 @@ void RH_RF22::handleInterrupt()
 	clearRxBuf();
     }
 }
+#pragma GCC pop_options
+
 
 #if RH_PLATFORM == RH_PLATFORM_ESP8266
 void RH_RF22::loopIsr()
@@ -345,6 +350,9 @@ void RH_RF22::loopIsr()
 // These are low level functions that call the interrupt handler for the correct
 // instance of RH_RF22.
 // 3 interrupts allows us to have 3 different devices
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void RH_INTERRUPT_ATTR RH_RF22::isr0()
 {
 #if RH_PLATFORM == RH_PLATFORM_ESP8266
@@ -354,6 +362,11 @@ void RH_INTERRUPT_ATTR RH_RF22::isr0()
 	_deviceForInterrupt[0]->handleInterrupt();
 #endif
 }
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void RH_INTERRUPT_ATTR RH_RF22::isr1()
 {
 #if RH_PLATFORM == RH_PLATFORM_ESP8266
@@ -363,6 +376,11 @@ void RH_INTERRUPT_ATTR RH_RF22::isr1()
 	_deviceForInterrupt[1]->handleInterrupt();
 #endif
 }
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void RH_INTERRUPT_ATTR RH_RF22::isr2()
 {
 #if RH_PLATFORM == RH_PLATFORM_ESP8266
@@ -372,6 +390,8 @@ void RH_INTERRUPT_ATTR RH_RF22::isr2()
 	_deviceForInterrupt[2]->handleInterrupt();
 #endif
 }
+#pragma GCC pop_options
+
 
 void RH_RF22::reset()
 {

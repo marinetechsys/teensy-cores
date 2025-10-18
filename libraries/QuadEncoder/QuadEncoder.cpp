@@ -490,37 +490,59 @@ void QuadEncoder::clearStatusFlags(uint32_t flag, uint8_t index)
     }
 }
 
-inline void QuadEncoder::checkAndProcessInterrupt(uint8_t index) 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
+void QuadEncoder::checkAndProcessInterrupt(uint8_t index)
 {
- 	list[index]->isr(index);
+	list[index]->isr(index);
 }
+#pragma GCC pop_options
 
-
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void QuadEncoder::isrEnc1()
 {
 	checkAndProcessInterrupt(1);
 	asm volatile ("dsb");  // wait for clear  memory barrier
 }
+#pragma GCC pop_options
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void QuadEncoder::isrEnc2()
 {
 	checkAndProcessInterrupt(2);
 	asm volatile ("dsb");  // wait for clear  memory barrier
-
 }
+#pragma GCC pop_options
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void QuadEncoder::isrEnc3()
 {
 	checkAndProcessInterrupt(3);
 	asm volatile ("dsb");  // wait for clear  memory barrier
 }
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void QuadEncoder::isrEnc4()
 {
 	checkAndProcessInterrupt(4);
 	asm volatile ("dsb");  // wait for clear  memory barrier
 }
+#pragma GCC pop_options
 
-void QuadEncoder::isr(uint8_t index) 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
+void QuadEncoder::isr(uint8_t index)
 {	
     if (ENC_CTRL_XIRQ_MASK == (ENC_CTRL_XIRQ_MASK & channel[index].ENC->CTRL) && (ENC_CTRL_XIE_MASK & channel[index].ENC->CTRL))
     {
@@ -559,6 +581,8 @@ void QuadEncoder::isr(uint8_t index)
 		clearStatusFlags(_positionCompareFlag, index);
 	}
 }
+#pragma GCC pop_options
+
 
 void QuadEncoder::enableCompareInterrupt()
 {

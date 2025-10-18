@@ -552,18 +552,29 @@ bool FlexIOSPI::transfer(const void *buf, void *retbuf, size_t count, EventRespo
 	return true;
 }
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void FlexIOSPI::_dma_rxISR0(void) {
 	FlexIOSPI::_dmaActiveObjects[0]->dma_rxisr();
 }
+#pragma GCC pop_options
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void FlexIOSPI::_dma_rxISR1(void) {
 	FlexIOSPI::_dmaActiveObjects[1]->dma_rxisr();
 }
+#pragma GCC pop_options
 
 
 //-------------------------------------------------------------------------
 // DMA RX ISR
 //-------------------------------------------------------------------------
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void FlexIOSPI::dma_rxisr(void) {
 	_dmaRX->clearInterrupt();
 	_dmaTX->clearComplete();
@@ -590,4 +601,5 @@ void FlexIOSPI::dma_rxisr(void) {
 
 	}
 }
+#pragma GCC pop_options
 

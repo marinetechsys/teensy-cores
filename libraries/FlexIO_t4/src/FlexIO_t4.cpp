@@ -167,6 +167,9 @@ FlexIOHandler *FlexIOHandler::flexIOHandler_list[] = {&flexIO1, &flexIO2, &flexI
 //-----------------------------------------------------------------------------
 // Interrupt functions
 //-----------------------------------------------------------------------------
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void IRQHandler_FlexIO1() {
 	FlexIOHandlerCallback **ppfhc = flex1_Handler_callbacks;
 //	Serial.printf("FI1: %x %x %x ", FLEXIO1_SHIFTSTAT, FLEXIO1_SHIFTSIEN, FLEXIO1_SHIFTERR);
@@ -180,8 +183,12 @@ void IRQHandler_FlexIO1() {
 //	Serial.printf(" %x %x %x\n", FLEXIO1_SHIFTSTAT, FLEXIO1_SHIFTSIEN, FLEXIO1_SHIFTERR);
 	 asm("dsb");
 }
+#pragma GCC pop_options
 
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void IRQHandler_FlexIO2() {
 	FlexIOHandlerCallback **ppfhc = flex2_Handler_callbacks;
 	for (uint8_t i = 0; i < FlexIOHandler::CNT_TIMERS; i++) {
@@ -193,7 +200,11 @@ void IRQHandler_FlexIO2() {
 	flexIO2.IRQHandler();
 	 asm("dsb");
 }
+#pragma GCC pop_options
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void IRQHandler_FlexIO3() {
 	FlexIOHandlerCallback **ppfhc = flex3_Handler_callbacks;
 	for (uint8_t i = 0; i < FlexIOHandler::CNT_TIMERS; i++) {
@@ -205,6 +216,7 @@ void IRQHandler_FlexIO3() {
 	flexIO3.IRQHandler();
 	 asm("dsb");
 }
+#pragma GCC pop_options
 
 //-----------------------------------------------------------------------------
 // Map IO pins to their Flex object and the flex pin 
@@ -320,9 +332,13 @@ bool FlexIOHandler::claimShifter(uint8_t shifter) {
 	return false;	
 }
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void FlexIOHandler::IRQHandler() {
   
 }
+#pragma GCC pop_options
 
 void FlexIOHandler::freeTimers(uint8_t n, uint8_t cnt) {
 	if (n == 0xff) return;	// don't free if we did not allocate

@@ -83,11 +83,20 @@ void EventResponder::triggerEventNotImmediate()
 	enableInterrupts(irq);
 }
 
-extern "C" void pendablesrvreq_isr(void)
+extern "C" {
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
+void pendablesrvreq_isr(void)
 {
 	EventResponder::runFromInterrupt();
 }
+#pragma GCC pop_options
+};
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void EventResponder::runFromInterrupt()
 {
 	while (1) {
@@ -109,6 +118,7 @@ void EventResponder::runFromInterrupt()
 		}
 	}
 }
+#pragma GCC pop_options
 
 bool EventResponder::clearEvent()
 {

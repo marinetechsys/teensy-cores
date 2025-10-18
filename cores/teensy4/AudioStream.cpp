@@ -435,6 +435,10 @@ void AudioStream::update_stop(void)
 
 AudioStream * AudioStream::first_update = NULL;
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
+
 void software_isr(void) // AudioStream::update_all()
 {
 	AudioStream *p;
@@ -460,4 +464,5 @@ void software_isr(void) // AudioStream::update_all()
 
 	asm("DSB");
 }
+#pragma GCC pop_options
 

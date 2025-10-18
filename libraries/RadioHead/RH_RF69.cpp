@@ -197,6 +197,9 @@ bool RH_RF69::init()
 // RH_RF69 is unusual in Mthat it has several interrupt lines, and not a single, combined one.
 // On Moteino, only one of the several interrupt lines (DI0) from the RH_RF69 is connnected to the processor.
 // We use this to get PACKETSDENT and PAYLOADRADY interrupts.
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void RH_RF69::handleInterrupt()
 {
     // Get the interrupt cause
@@ -222,6 +225,8 @@ void RH_RF69::handleInterrupt()
 //	Serial.println("PAYLOADREADY");
     }
 }
+#pragma GCC pop_options
+
 
 // Low level function reads the FIFO and checks the address
 // Caution: since we put our headers in what the RH_RF69 considers to be the payload, if encryption is enabled
@@ -263,21 +268,36 @@ void RH_RF69::readFifo()
 // These are low level functions that call the interrupt handler for the correct
 // instance of RH_RF69.
 // 3 interrupts allows us to have 3 different devices
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void RH_INTERRUPT_ATTR RH_RF69::isr0()
 {
     if (_deviceForInterrupt[0])
 	_deviceForInterrupt[0]->handleInterrupt();
 }
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void RH_INTERRUPT_ATTR RH_RF69::isr1()
 {
     if (_deviceForInterrupt[1])
 	_deviceForInterrupt[1]->handleInterrupt();
 }
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void RH_INTERRUPT_ATTR RH_RF69::isr2()
 {
     if (_deviceForInterrupt[2])
 	_deviceForInterrupt[2]->handleInterrupt();
 }
+#pragma GCC pop_options
+
 
 int8_t RH_RF69::temperatureRead()
 {

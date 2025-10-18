@@ -660,6 +660,9 @@ uint8_t RH_ASK::maxMessageLength()
 #endif
 
 #if (RH_PLATFORM == RH_PLATFORM_ARDUINO) && defined(__arm__) && defined(CORE_TEENSY)	
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void TIMER1_COMPA_vect(void)
 {
     thisASKDriver->handleTimerInterrupt();

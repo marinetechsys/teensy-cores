@@ -42,11 +42,15 @@ void ftm2_isr(void)
 }
 
 #elif defined(__arm__) && defined(TEENSYDUINO) && defined(__IMXRT1062__)
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void TimerThree::isr(void)
 {
   FLEXPWM2_SM2STS = FLEXPWM_SMSTS_RF;
   Timer3.isrCallback();
 }
+#pragma GCC pop_options
 
 #endif
 

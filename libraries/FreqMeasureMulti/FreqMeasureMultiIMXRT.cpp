@@ -30,20 +30,90 @@
 #define M(a, b) ((((a) - 1) << 2) | (b))   // should translate from 0-15
 FreqMeasureMulti * FreqMeasureMulti::list[16] = {nullptr, nullptr, nullptr, nullptr};
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void FreqMeasureMulti::flexpwm1_0_isr() {list[M(1,0)]->isr();}
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void FreqMeasureMulti::flexpwm1_1_isr() {list[M(1,1)]->isr();}
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void FreqMeasureMulti::flexpwm1_2_isr() {list[M(1,2)]->isr();}
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void FreqMeasureMulti::flexpwm1_3_isr() {list[M(1,3)]->isr();}
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void FreqMeasureMulti::flexpwm2_0_isr() {list[M(2,0)]->isr();}
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void FreqMeasureMulti::flexpwm2_1_isr() {list[M(2,1)]->isr();}
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void FreqMeasureMulti::flexpwm2_2_isr() {list[M(2,2)]->isr();}
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void FreqMeasureMulti::flexpwm2_3_isr() {list[M(2,3)]->isr();}
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void FreqMeasureMulti::flexpwm3_0_isr() {list[M(3,0)]->isr();}
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void FreqMeasureMulti::flexpwm3_1_isr() {list[M(3,1)]->isr();}
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void FreqMeasureMulti::flexpwm3_3_isr() {list[M(3,3)]->isr();}
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void FreqMeasureMulti::flexpwm4_0_isr() {list[M(4,0)]->isr();}
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void FreqMeasureMulti::flexpwm4_1_isr() {list[M(4,1)]->isr();}
+#pragma GCC pop_options
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void FreqMeasureMulti::flexpwm4_2_isr() {list[M(4,2)]->isr();}
+#pragma GCC pop_options
+
 
 
 const struct freq_pwm_pin_info_struct FreqMeasureMulti::freq_pwm_pin_info[] = {
@@ -288,6 +358,9 @@ void FreqMeasureMulti::end(void)
 }
 
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void FreqMeasureMulti::processChannelISR(uint8_t channel, uint32_t capture, uint8_t edge)
 {
 	uint8_t level = LEVEL_UNDEFINED;
@@ -345,7 +418,12 @@ void FreqMeasureMulti::processChannelISR(uint8_t channel, uint32_t capture, uint
 		_next->processChannelISR(channel, capture, edge);
 	}
 }
+#pragma GCC pop_options
 
+
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void FreqMeasureMulti::isr()
 {
 	IMXRT_FLEXPWM_t *pflexpwm = freq_pwm_pin_info[_pin].pflexpwm;
@@ -428,4 +506,6 @@ void FreqMeasureMulti::isr()
 		processChannelISR(0, capture, 1);
 	}
 }
+#pragma GCC pop_options
+
 #endif

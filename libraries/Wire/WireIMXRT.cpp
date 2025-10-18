@@ -293,6 +293,9 @@ void TwoWire::begin(uint8_t address)
 }
 
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void TwoWire::isr(void)
 {
 	IMXRT_LPI2C_t* port = (IMXRT_LPI2C_t*)portAddr;
@@ -343,6 +346,8 @@ void TwoWire::isr(void)
 		transmitting = 0;
 	}
 }
+#pragma GCC pop_options
+
 
 
 
@@ -409,14 +414,56 @@ FLASHMEM void TwoWire::configSCLpin(uint8_t i)
 
 
 #if defined(ARDUINO_TEENSY_MICROMOD)
-void lpi2c1_isr(void) { Wire.isr(); }
-void lpi2c3_isr(void) { Wire2.isr(); }
-void lpi2c4_isr(void) { Wire1.isr(); }
-void lpi2c2_isr(void) { Wire3.isr(); }
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
+void lpi2c1_isr(void) {
+	Wire.isr();
+}
+#pragma GCC pop_options
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
+void lpi2c3_isr(void) {
+	Wire2.isr();
+}
+#pragma GCC pop_options
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
+void lpi2c4_isr(void) {
+	Wire1.isr();
+}
+#pragma GCC pop_options
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
+void lpi2c2_isr(void) {
+	Wire3.isr();
+}
+#pragma GCC pop_options
 #else
-void lpi2c1_isr(void) { Wire.isr(); }
-void lpi2c3_isr(void) { Wire1.isr(); }
-void lpi2c4_isr(void) { Wire2.isr(); }
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
+void lpi2c1_isr(void) {
+	Wire.isr();
+}
+#pragma GCC pop_options
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
+void lpi2c3_isr(void) {
+	Wire1.isr();
+}
+#pragma GCC pop_options
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
+void lpi2c4_isr(void) {
+	Wire2.isr();
+}
+#pragma GCC pop_options
 #endif
 
 PROGMEM

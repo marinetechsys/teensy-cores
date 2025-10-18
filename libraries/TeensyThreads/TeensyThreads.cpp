@@ -135,17 +135,25 @@ void __attribute((naked, noinline)) threads_svcall_isr(void)
 
 extern "C" void unused_interrupt_vector(void);
 
-static void __attribute((naked, noinline)) gpt1_isr() {
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone, naked))
+static void gpt1_isr() {
   GPT1_SR |= GPT_SR_OF1;  // clear set bit
   __asm volatile ("dsb"); // see github bug #20 by manitou48
   __asm volatile("b context_switch");
 }
+#pragma GCC pop_options
 
-static void __attribute((naked, noinline)) gpt2_isr() {
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone, naked))
+static void gpt2_isr() {
   GPT2_SR |= GPT_SR_OF1;  // clear set bit
   __asm volatile ("dsb"); // see github bug #20 by manitou48
   __asm volatile("b context_switch");
 }
+#pragma GCC pop_options
 
 bool gtp1_init(unsigned int microseconds)
 {

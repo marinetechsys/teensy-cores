@@ -141,6 +141,9 @@ ISR(TIMER_CAPTURE_VECTOR)
 
 #elif defined(__arm__) && defined(TEENSYDUINO)
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void FTM_ISR_NAME (void)
 {
 	uint32_t capture, period, i;
@@ -170,6 +173,7 @@ void FTM_ISR_NAME (void)
 		}
 	}
 }
+#pragma GCC pop_options
 
 
 #endif

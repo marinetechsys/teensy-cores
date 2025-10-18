@@ -300,6 +300,9 @@ void USBHost::begin()
 // PORT_STATE_ACTIVE         4
 
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void USBHost::isr()
 {
 	uint32_t stat = USBHS_USBSTS;
@@ -475,6 +478,7 @@ void USBHost::isr()
 		}
 	}
 }
+#pragma GCC pop_options
 
 void USBDriverTimer::start(uint32_t microseconds)
 {

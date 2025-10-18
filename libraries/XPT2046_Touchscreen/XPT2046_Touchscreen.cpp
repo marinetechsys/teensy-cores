@@ -63,12 +63,16 @@ bool XPT2046_Touchscreen::begin(FlexIOSPI &wflexspi)
 #endif
 
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 ISR_PREFIX
 void isrPin( void )
 {
 	XPT2046_Touchscreen *o = isrPinptr;
 	o->isrWake = true;
 }
+#pragma GCC pop_options
 
 TS_Point XPT2046_Touchscreen::getPoint()
 {

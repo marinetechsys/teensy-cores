@@ -133,6 +133,9 @@ inline void PulsePositionBase::checkAndProcessTimerCHInPending(uint8_t index, vo
 }
 
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void PulsePositionBase::isrTimer1()
 {
 	DBGdigitalWriteFast(2, HIGH);
@@ -142,7 +145,11 @@ void PulsePositionBase::isrTimer1()
 	asm volatile ("dsb");  // wait for clear  memory barrier
 	DBGdigitalWriteFast(2, LOW);
 }
+#pragma GCC pop_options
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void PulsePositionBase::isrTimer2()
 {
 	DBGdigitalWriteFast(2, HIGH);
@@ -151,7 +158,11 @@ void PulsePositionBase::isrTimer2()
 	DBGdigitalWriteFast(2, LOW);
 
 }
+#pragma GCC pop_options
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void PulsePositionBase::isrTimer3()
 {
 	DBGdigitalWriteFast(2, HIGH);
@@ -162,6 +173,10 @@ void PulsePositionBase::isrTimer3()
 	asm volatile ("dsb");  // wait for clear  memory barrier
 	DBGdigitalWriteFast(2, LOW);
 }
+#pragma GCC pop_options
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void PulsePositionBase::isrTimer4()
 {
 	DBGdigitalWriteFast(2, HIGH);
@@ -170,6 +185,7 @@ void PulsePositionBase::isrTimer4()
 	asm volatile ("dsb");  // wait for clear  memory barrier
 	DBGdigitalWriteFast(2, LOW);
 }
+#pragma GCC pop_options
 //-----------------------------------------------------------------------------
 // PulsePositionOutput 
 //-----------------------------------------------------------------------------
@@ -283,6 +299,9 @@ bool PulsePositionOutput::write(uint8_t channel, float microseconds)
 }
 
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void PulsePositionOutput::isr() 
 {
 	DBGdigitalWriteFast(3, HIGH);
@@ -339,6 +358,7 @@ void PulsePositionOutput::isr()
 
 	DBGdigitalWriteFast(3, LOW);
 }
+#pragma GCC pop_options
 
 
 //-----------------------------------------------------------------------------
@@ -462,6 +482,9 @@ float PulsePositionInput::read(uint8_t channel)
 }
 
 
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 void PulsePositionInput::isr() {  // capture and compare
   DBGdigitalWriteFast(4, HIGH);
   uint8_t channel = hardware[idx_channel].channel;
@@ -512,6 +535,7 @@ void PulsePositionInput::isr() {  // capture and compare
   overflow_inc = false;
   DBGdigitalWriteFast(4, LOW);
 }
+#pragma GCC pop_options
 
 #endif
 
