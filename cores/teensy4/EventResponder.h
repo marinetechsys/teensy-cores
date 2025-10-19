@@ -229,14 +229,14 @@ protected:
 private:
 #pragma GCC push_options
 #pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
-    __attribute__ ((section(".fastrun"), noinline, noclone ))
+    __attribute__ ((section(".fastrun")))
     static bool disableInterrupts() {
 		uint32_t primask;
 		__asm__ volatile("mrs %0, primask\n" : "=r" (primask)::);
 		__disable_irq();
 		return (primask == 0) ? true : false;
 	}
-    __attribute__ ((section(".fastrun"), noinline, noclone ))
+    __attribute__ ((section(".fastrun")))
 	static void enableInterrupts(bool doit) {
 		if (doit) __enable_irq();
 	}
