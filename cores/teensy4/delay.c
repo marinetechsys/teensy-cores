@@ -12,6 +12,38 @@ uint32_t systick_safe_read;	 // micros() synchronization
 //Hardware devides this down to 100KHz. (RM Rev2, 13.3.21 PG 986)
 #define SYSTICK_EXT_FREQ 100000
 
+#pragma GCC push_options
+#pragma GCC optimize ("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+
+FASTRUN uint64_t micros64()
+{
+    uint32_t smc, scc, cyccnt;
+    do {
+        // Atomic read of systick_millis_count and systick_cycle_count
+        __LDREXW(&systick_safe_read);
+        smc = systick_millis_count;
+        scc = systick_cycle_count;
+        cyccnt = ARM_DWT_CYCCNT;
+    } while (__STREXW(1, &systick_safe_read));
+
+    const uint32_t ccdelta { cyccnt - scc };
+    const uint32_t frac { static_cast<uint32_t>((static_cast<uint64_t>(ccdelta) * scale_cpu_cycles_to_microseconds) >> 32) };
+
+    return static_cast<uint64_t>(smc) * 1'000ULL + frac;
+}
+
+FASTRUN uint64_t micros64_visr()
+{
+    const uint32_t smc { systick_millis_count };
+    const uint32_t scc { systick_cycle_count };
+    const uint32_t cyccnt { ARM_DWT_CYCCNT };
+    const uint32_t ccdelta { cyccnt - scc };
+    const uint32_t frac { static_cast<uint32_t>((static_cast<uint64_t>(ccdelta) * scale_cpu_cycles_to_microseconds) >> 32) };
+
+    return static_cast<uint64_t>(smc) * 1'000ULL + frac;
+}
+#pragma GCC pop_options
+
 #if 0
 // moved to EventResponder.cpp
 void systick_isr(void)
