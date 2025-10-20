@@ -2339,6 +2339,9 @@ static inline uint32_t millis(void)
 	return out;
 }
 
+extern uint64_t micros64();
+extern uint64_t micros64_visr();
+
 extern uint32_t _micros(void) __attribute__((noinline));
 
 static inline uint32_t micros(void) __attribute__((always_inline, unused));
