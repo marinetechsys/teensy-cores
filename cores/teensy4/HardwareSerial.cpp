@@ -31,6 +31,7 @@
 #include "HardwareSerial.h"
 #include "core_pins.h"
 #include "Arduino.h"
+#include "usb_serial_redirect.h"
 //#include "debug/printf.h"
 
 /*typedef struct {
@@ -61,6 +62,15 @@
 #define DIRECT_WRITE_HIGH(base, mask)   (*((base)+33) = (mask))
 
 #define UART_CLOCK 24000000
+
+__attribute__((always_inline))
+uint32_t __get_PRIMASK_HWS(void)
+{
+  uint32_t result;
+
+  __asm volatile ("MRS %0, primask" : "=r" (result) );
+  return(result);
+}
 
 extern "C" {
     extern void xbar_connect(unsigned int input, unsigned int output);
@@ -617,6 +627,175 @@ size_t HardwareSerialIMXRT::write9bit(uint32_t c)
 	return 1;
 }
 
+size_t HardwareSerialIMXRT::writeFromISR(const uint8_t *buffer, size_t size)
+{
+	if (!size) return 0;
+	IMXRT_LPUART_t *port = (IMXRT_LPUART_t *)port_addr;
+	if (transmit_pin_baseReg_) DIRECT_WRITE_HIGH(transmit_pin_baseReg_, transmit_pin_bitmask_);
+	if (half_duplex_mode_) {
+		uint32_t primask = __get_PRIMASK_HWS();
+		__disable_irq();
+		port->CTRL |= LPUART_CTRL_TXDIR;
+		if (!primask) __enable_irq();
+	}
+
+	uint32_t head = tx_buffer_head_;
+	size_t written = 0;
+	while (written < size) {
+		uint32_t newhead = head + 1;
+		if (newhead >= tx_buffer_total_size_) newhead = 0;
+		uint32_t tail = tx_buffer_tail_;
+		if (newhead == tail) break;
+		head = newhead;
+		uint8_t c = buffer[written++];
+		if (head < tx_buffer_size_) {
+			tx_buffer_[head] = c;
+		} else {
+			tx_buffer_storage_[head - tx_buffer_size_] = c;
+		}
+	}
+	if (written) {
+		uint32_t primask = __get_PRIMASK_HWS();
+		__disable_irq();
+		transmitting_ = 1;
+		tx_buffer_head_ = head;
+		port->CTRL |= LPUART_CTRL_TIE;
+		if (!primask) __enable_irq();
+	}
+	return written;
+}
+
+void HardwareSerialIMXRT::setReceiveRedirect(isr_rx_redirect_cb_t callback, void *context)
+{
+	uint32_t primask = __get_PRIMASK_HWS();
+	__disable_irq();
+	rx_redirect_cb_ = callback;
+	rx_redirect_context_ = context;
+	if (!primask) __enable_irq();
+}
+
+void HardwareSerialIMXRT::clearReceiveRedirect(void *context)
+{
+	uint32_t primask = __get_PRIMASK_HWS();
+	__disable_irq();
+	if (rx_redirect_context_ == context) {
+		rx_redirect_cb_ = nullptr;
+		rx_redirect_context_ = nullptr;
+	}
+	if (!primask) __enable_irq();
+}
+
+static bool usb_serial_redirect_thunk(void *ctx, uint8_t data)
+{
+	usb_serial_redirect_adapter *adapter = static_cast<usb_serial_redirect_adapter *>(ctx);
+	if (!adapter || !adapter->callback) return false;
+	int consumed = adapter->callback(adapter->context, data);
+	return consumed ? true : false;
+}
+
+extern "C" {
+
+size_t usb_serial_bridge_uart_write(HardwareSerialIMXRT *uart, const uint8_t *buffer, size_t size)
+{
+	if (!uart) return 0;
+	return uart->writeFromISR(buffer, size);
+}
+
+void usb_serial_bridge_set_redirect(HardwareSerialIMXRT *uart, usb_serial_redirect_cb_t cb, void *context)
+{
+	if (!uart) return;
+	usb_serial_redirect_adapter *adapter = static_cast<usb_serial_redirect_adapter *>(context);
+	if (!cb || !adapter) {
+		uart->setReceiveRedirect(nullptr, nullptr);
+		if (adapter) adapter->callback = nullptr;
+		return;
+	}
+	adapter->callback = cb;
+	uart->setReceiveRedirect(usb_serial_redirect_thunk, adapter);
+}
+
+void usb_serial_bridge_clear_redirect(HardwareSerialIMXRT *uart, void *context)
+{
+	if (!uart) return;
+	uart->clearReceiveRedirect(context);
+	usb_serial_redirect_adapter *adapter = static_cast<usb_serial_redirect_adapter *>(context);
+	if (adapter) adapter->callback = nullptr;
+}
+
+static HardwareSerialIMXRT *const usb_serial_all_uarts[] = {
+	&Serial1,
+	&Serial2,
+	&Serial3,
+	&Serial4,
+	&Serial5,
+	&Serial6,
+	&Serial7,
+#if defined(ARDUINO_TEENSY41)
+	&Serial8,
+#endif
+};
+
+struct HardwareSerialIMXRT *usb_serial_bridge_get_uart(uint8_t index)
+{
+	for (unsigned i = 0; i < (sizeof(usb_serial_all_uarts) / sizeof(usb_serial_all_uarts[0])); i++) {
+		HardwareSerialIMXRT *uart = usb_serial_all_uarts[i];
+		if (uart->serialIndex() == index) return uart;
+	}
+	return nullptr;
+}
+
+uint8_t usb_serial_bridge_get_uart_index(HardwareSerialIMXRT *uart)
+{
+	if (!uart) return 0xFF;
+	return uart->serialIndex();
+}
+
+void usb_serial_bridge_uart_begin(HardwareSerialIMXRT *uart, uint32_t baud, uint16_t format)
+{
+	if (!uart) return;
+	uart->begin(baud, format);
+}
+
+uint16_t usb_serial_bridge_format_from_line_coding(uint32_t line_format)
+{
+	uint8_t stopbits = line_format & 0xFF;
+	uint8_t parity = (line_format >> 8) & 0xFF;
+	uint8_t databits = (line_format >> 16) & 0xFF;
+	uint16_t format = SERIAL_8N1;
+
+	switch (parity) {
+	case 1:
+		format = SERIAL_8O1;
+		break;
+	case 2:
+		format = SERIAL_8E1;
+		break;
+	default:
+		format = SERIAL_8N1;
+		break;
+	}
+
+	if (databits == 7) {
+		switch (parity) {
+		case 1:
+			format = SERIAL_7O1;
+			break;
+		case 2:
+			format = SERIAL_7E1;
+			break;
+		default:
+			format = SERIAL_7E1;
+			break;
+		}
+	}
+
+	if (stopbits == 2) format |= SERIAL_2STOP_BITS;
+
+	return format;
+}
+
+} // extern "C"
+
 #pragma GCC push_options
 #pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
 __attribute__ ((section(".fastrun"), noinline, noclone ))
@@ -630,33 +809,37 @@ void HardwareSerialIMXRT::IRQHandler()
 	// See if we have stuff to read in.
 	// Todo - Check idle. 
 	if (port->STAT & (LPUART_STAT_RDRF | LPUART_STAT_IDLE)) {
-		// See how many bytes or pending. 
+		// See how many bytes are pending.
 		//digitalWrite(5, HIGH);
-		uint8_t avail = (port->WATER >> 24) & 0x7;
-		if (avail) {
+		uint8_t pending = (port->WATER >> 24) & 0x7;
+		if (pending) {
 			uint32_t newhead;
 			head = rx_buffer_head_;
 			tail = rx_buffer_tail_;
-			do {
-				n = port->DATA & 0x3ff;		// Use only up to 10 bits of data
+			while (pending--) {
+				n = port->DATA & 0x3ff; // Use only up to 10 bits of data
+				if (rx_redirect_cb_) {
+					if (rx_redirect_cb_(rx_redirect_context_, (uint8_t)n)) {
+						continue;
+					}
+				}
 				newhead = head + 1;
-
 				if (newhead >= rx_buffer_total_size_) newhead = 0;
 				if (newhead != rx_buffer_tail_) {
 					head = newhead;
 					if (newhead < rx_buffer_size_) {
 						rx_buffer_[head] = n;
 					} else {
-						rx_buffer_storage_[head-rx_buffer_size_] = n;
+						rx_buffer_storage_[head - rx_buffer_size_] = n;
 					}
 				}
-			} while (--avail > 0) ;
+			}
 			rx_buffer_head_ = head;
 			if (rts_pin_baseReg_) {
-				uint32_t avail;
-				if (head >= tail) avail = head - tail;
-				else avail = rx_buffer_total_size_ + head - tail;
-				if (avail >= rts_high_watermark_) rts_deassert();
+				uint32_t buffered;
+				if (head >= tail) buffered = head - tail;
+				else buffered = rx_buffer_total_size_ + head - tail;
+				if (buffered >= rts_high_watermark_) rts_deassert();
 			}
 		}
 
@@ -762,4 +945,3 @@ const pin_to_xbar_info_t PROGMEM pin_to_xbar_info[] = {
 };
 
 const uint8_t PROGMEM count_pin_to_xbar_info = sizeof(pin_to_xbar_info)/sizeof(pin_to_xbar_info[0]);
-

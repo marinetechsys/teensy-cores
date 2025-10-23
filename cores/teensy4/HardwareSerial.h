@@ -174,6 +174,7 @@ class HardwareSerialIMXRT : public HardwareSerial
 public:
 	static const uint8_t cnt_tx_pins = 2;
 	static const uint8_t cnt_rx_pins = 2;
+	using isr_rx_redirect_cb_t = bool (*)(void *context, uint8_t data);
 	typedef struct {
 		const uint8_t 		pin;		// The pin number
 		const uint32_t 		mux_val;	// Value to set for mux;
@@ -269,6 +270,7 @@ public:
 		addMemoryForWrite(buffer, length);
 	}
 	size_t write9bit(uint32_t c);
+	size_t writeFromISR(const uint8_t *buffer, size_t size);
 	
 	// Event Handler functions and data
 	static uint8_t serial_event_handlers_active;
@@ -282,6 +284,10 @@ public:
 	size_t write(unsigned int n) { return write((uint8_t)n); }
 	// Transmit a single byte
 	size_t write(int n) { return write((uint8_t)n); }
+
+	uint8_t serialIndex() const { return hardware->serial_index; }
+	void setReceiveRedirect(isr_rx_redirect_cb_t callback, void *context);
+	void clearReceiveRedirect(void *context);
 
 	// Only overwrite some of the virtualWrite functions if we are going to optimize them over Print version
 
@@ -330,6 +336,9 @@ private:
 
   	inline void rts_assert();
   	inline void rts_deassert();
+
+	isr_rx_redirect_cb_t rx_redirect_cb_ = nullptr;
+	void *rx_redirect_context_ = nullptr;
 
 	void IRQHandler();
 	friend void IRQHandler_Serial1();

@@ -1,6 +1,6 @@
 /* Teensyduino Core Library
  * http://www.pjrc.com/teensy/
- * Copyright (c) 2017 PJRC.COM, LLC.
+ * Copyright (c) 2024
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -28,48 +28,31 @@
  * SOFTWARE.
  */
 
-#include <Arduino.h>
-#include "EventResponder.h"
-#include "usb_serial.h"
+#pragma once
 
-volatile uint8_t yield_active_check_flags = 0;
+#include <stdint.h>
 
-
-void yield(void) __attribute__ ((weak));
-void yield(void)
-{
-	const uint8_t check_flags = yield_active_check_flags;
-	if (!check_flags) return;	// nothing to do
-
-	// TODO: do nothing if called from interrupt
-
-	static uint8_t running=0;
-	if (running) return; // TODO: does this need to be atomic?
-	running = 1;
-
-	// USB Serial - Add hack to minimize impact...
-	if (check_flags & YIELD_CHECK_USB_SERIAL) {
-		if (Serial.available()) serialEvent();
-	}
-
-#if defined(USB_DUAL_SERIAL) || defined(USB_TRIPLE_SERIAL)
-	if (check_flags & YIELD_CHECK_USB_SERIALUSB1) {
-		if (SerialUSB1.available()) serialEventUSB1();
-	}
-#endif
-#ifdef USB_TRIPLE_SERIAL
-	if (check_flags & YIELD_CHECK_USB_SERIALUSB2) {
-		if (SerialUSB2.available()) serialEventUSB2();
-	}
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-	// Current workaround until integrate with EventResponder.
-	if (check_flags & YIELD_CHECK_HARDWARE_SERIAL) {
-		HardwareSerialIMXRT::processSerialEventsList();
-	}
+struct HardwareSerialIMXRT;
 
-	running = 0;
-	if (check_flags & YIELD_CHECK_EVENT_RESPONDER) {
-		EventResponder::runFromYield();
-	}
+typedef int (*usb_serial_redirect_cb_t)(void *context, uint8_t data);
+
+struct usb_serial_redirect_adapter {
+	usb_serial_redirect_cb_t callback;
+	void *context;
 };
+
+size_t usb_serial_bridge_uart_write(struct HardwareSerialIMXRT *uart, const uint8_t *buffer, size_t size);
+void usb_serial_bridge_set_redirect(struct HardwareSerialIMXRT *uart, usb_serial_redirect_cb_t cb, void *context);
+void usb_serial_bridge_clear_redirect(struct HardwareSerialIMXRT *uart, void *context);
+struct HardwareSerialIMXRT *usb_serial_bridge_get_uart(uint8_t index);
+uint8_t usb_serial_bridge_get_uart_index(struct HardwareSerialIMXRT *uart);
+void usb_serial_bridge_uart_begin(struct HardwareSerialIMXRT *uart, uint32_t baud, uint16_t format);
+uint16_t usb_serial_bridge_format_from_line_coding(uint32_t line_format);
+
+#ifdef __cplusplus
+}
+#endif

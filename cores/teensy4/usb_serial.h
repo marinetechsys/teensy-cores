@@ -33,6 +33,10 @@
 #include "usb_desc.h"
 #include <stdint.h>
 
+#ifdef __cplusplus
+#include "HardwareSerial.h"
+#endif
+
 #if (defined(CDC_STATUS_INTERFACE) && defined(CDC_DATA_INTERFACE)) || defined(USB_DISABLED)
 
 #if !defined(USB_DISABLED)
@@ -182,7 +186,6 @@ public:
 		setReadError();
 		return count;
 	}
-
 };
 // Serial provides USB Virtual Serial communication with your computer.
 extern usb_serial_class Serial;
@@ -252,6 +255,9 @@ extern uint32_t usb_cdc2_line_coding[2];
 extern volatile uint32_t usb_cdc2_line_rtsdtr_millis;
 extern volatile uint8_t usb_cdc2_line_rtsdtr;
 extern volatile uint8_t usb_cdc2_transmit_flush_timer;
+void usb_serial2_map_uart(uint8_t index);
+void usb_serial2_unmap_uart(void);
+void usb_serial2_line_coding_changed(void);
 extern void serialEventUSB1(void) __attribute__((weak));
 #ifdef __cplusplus
 }
@@ -292,6 +298,8 @@ public:
         virtual int availableForWrite() { return usb_serial2_write_buffer_free(); }
         using Print::write;
         void send_now(void) { usb_serial2_flush_output(); }
+        void mapTo(HardwareSerialIMXRT &serial) { usb_serial2_map_uart(serial.serialIndex()); }
+        void unmap() { usb_serial2_unmap_uart(); }
         uint32_t baud(void) { return usb_cdc2_line_coding[0]; }
         uint8_t stopbits(void) { uint8_t b = usb_cdc2_line_coding[1]; if (!b) b = 1; return b; }
         uint8_t paritytype(void) { return usb_cdc2_line_coding[1] >> 8; } // 0=none, 1=odd, 2=even
@@ -342,6 +350,9 @@ extern uint32_t usb_cdc3_line_coding[2];
 extern volatile uint32_t usb_cdc3_line_rtsdtr_millis;
 extern volatile uint8_t usb_cdc3_line_rtsdtr;
 extern volatile uint8_t usb_cdc3_transmit_flush_timer;
+void usb_serial3_map_uart(uint8_t index);
+void usb_serial3_unmap_uart(void);
+void usb_serial3_line_coding_changed(void);
 extern void serialEventUSB2(void) __attribute__((weak));
 #ifdef __cplusplus
 }
@@ -382,6 +393,8 @@ public:
         virtual int availableForWrite() { return usb_serial3_write_buffer_free(); }
         using Print::write;
         void send_now(void) { usb_serial3_flush_output(); }
+        void mapTo(HardwareSerialIMXRT &serial) { usb_serial3_map_uart(serial.serialIndex()); }
+        void unmap() { usb_serial3_unmap_uart(); }
         uint32_t baud(void) { return usb_cdc3_line_coding[0]; }
         uint8_t stopbits(void) { uint8_t b = usb_cdc3_line_coding[1]; if (!b) b = 1; return b; }
         uint8_t paritytype(void) { return usb_cdc3_line_coding[1] >> 8; } // 0=none, 1=odd, 2=even
@@ -409,7 +422,6 @@ extern usb_serial3_class SerialUSB2;
 #endif // __cplusplus
 
 #endif // CDC3_STATUS_INTERFACE && CDC3_DATA_INTERFACE
-
 
 
 

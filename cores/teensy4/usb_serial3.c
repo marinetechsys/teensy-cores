@@ -37,6 +37,7 @@
 
 #include "debug/printf.h"
 #include "core_pins.h"
+#include "usb_serial_redirect.h"
 
 // defined by usb_dev.h -> usb_desc.h
 #if defined(CDC3_STATUS_INTERFACE) && defined(CDC3_DATA_INTERFACE)
@@ -77,6 +78,30 @@ static uint8_t rx_list[RX_NUM + 1];
 static volatile uint32_t rx_available;
 static void rx_queue_transfer(int i);
 static void rx_event(transfer_t *t);
+
+struct usb_serial3_bridge_state {
+	struct usb_serial_redirect_adapter adapter;
+	struct HardwareSerialIMXRT *uart;
+	uint8_t uart_index;
+	uint32_t dropped_from_host;
+	uint32_t dropped_from_uart;
+};
+
+static struct usb_serial3_bridge_state usb_serial3_bridge = {
+	.adapter = { NULL, NULL },
+	.uart = NULL,
+	.uart_index = 0xFF,
+	.dropped_from_host = 0,
+	.dropped_from_uart = 0
+};
+
+static inline int usb_serial3_redirect_active(void)
+{
+	return usb_serial3_bridge.uart != NULL;
+}
+
+static uint32_t usb_serial3_forward_to_host(const uint8_t *data, uint32_t len);
+static int usb_serial3_uart_rx_callback(void *context, uint8_t byte);
 
 
 void usb_serial3_configure(void)
@@ -126,11 +151,25 @@ static void rx_queue_transfer(int i)
 }
 
 // called by USB interrupt when any packet is received
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 static void rx_event(transfer_t *t)
 {
 	int len = rx_packet_size - ((t->status >> 16) & 0x7FFF);
 	int i = t->callback_param;
 	printf("rx event, len=%d, i=%d\n", len, i);
+	if (usb_serial3_redirect_active()) {
+		if (len > 0) {
+			const uint8_t *src = rx_buffer + i * CDC_RX_SIZE_480;
+			uint32_t sent = usb_serial_bridge_uart_write(usb_serial3_bridge.uart, src, len);
+			if (sent < (uint32_t)len) {
+				usb_serial3_bridge.dropped_from_host += (uint32_t)len - sent;
+			}
+		}
+		rx_queue_transfer(i);
+		return;
+	}
 	if (len > 0) {
 		// received a packet with data
 		uint32_t head = rx_head;
@@ -162,6 +201,7 @@ static void rx_event(transfer_t *t)
 		rx_queue_transfer(i);
 	}
 }
+#pragma GCC pop_options
 
 //static int maxtimes=0;
 
@@ -398,6 +438,68 @@ int usb_serial3_write(const void *buffer, uint32_t size)
 	return sent;
 }
 
+static uint32_t usb_serial3_forward_to_host(const uint8_t *data, uint32_t len)
+{
+	uint32_t sent = 0;
+	if (!usb_configuration || len == 0) return 0;
+	tx_noautoflush = 1;
+	while (len > 0) {
+		transfer_t *queue_xfer = NULL;
+		uint8_t *queue_buf = NULL;
+		uint32_t amount;
+		__disable_irq();
+		if (tx_available == 0) {
+			transfer_t *current = tx_transfer + tx_head;
+			uint32_t status = usb_transfer_status(current);
+			if (!(status & 0x80)) {
+				tx_available = TX_SIZE;
+			} else {
+				__enable_irq();
+				break;
+			}
+		}
+		amount = len;
+		if (amount > tx_available) amount = tx_available;
+		uint8_t *dest = txbuffer + (tx_head * TX_SIZE) + (TX_SIZE - tx_available);
+		memcpy(dest, data, amount);
+		tx_available -= amount;
+		if (tx_available == 0) {
+			queue_xfer = tx_transfer + tx_head;
+			queue_buf = txbuffer + (tx_head * TX_SIZE);
+			if (++tx_head >= TX_NUM) tx_head = 0;
+		}
+		__enable_irq();
+		if (queue_xfer) {
+			usb_prepare_transfer(queue_xfer, queue_buf, TX_SIZE, 0);
+			arm_dcache_flush_delete(queue_buf, TX_SIZE);
+			usb_transmit(CDC3_TX_ENDPOINT, queue_xfer);
+			timer_stop();
+		} else {
+			timer_start_oneshot();
+		}
+		data += amount;
+		len -= amount;
+		sent += amount;
+	}
+	tx_noautoflush = 0;
+	return sent;
+}
+
+static int usb_serial3_uart_rx_callback(void *context, uint8_t byte)
+{
+	struct usb_serial3_bridge_state *state = (struct usb_serial3_bridge_state *)context;
+	if (!state) return 0;
+	uint8_t data = byte;
+	if (!usb_configuration) {
+		state->dropped_from_uart++;
+		return 1;
+	}
+	if (usb_serial3_forward_to_host(&data, 1) == 0) {
+		state->dropped_from_uart++;
+	}
+	return 1;
+}
+
 int usb_serial3_write_buffer_free(void)
 {
 	uint32_t sum = 0;
@@ -441,6 +543,47 @@ static void usb_serial3_flush_callback(void)
 	usb_transmit(CDC3_TX_ENDPOINT, xfer);
 	if (++tx_head >= TX_NUM) tx_head = 0;
 	tx_available = 0;
+}
+
+void usb_serial3_map_uart(uint8_t index)
+{
+	if (index == 0xFF) {
+		usb_serial3_unmap_uart();
+		return;
+	}
+	struct HardwareSerialIMXRT *uart = usb_serial_bridge_get_uart(index);
+	if (!uart) {
+		usb_serial3_unmap_uart();
+		return;
+	}
+	if (usb_serial3_bridge.uart == uart) {
+		usb_serial_bridge_uart_begin(uart, usb_cdc3_line_coding[0], usb_serial_bridge_format_from_line_coding(usb_cdc3_line_coding[1]));
+		return;
+	}
+	usb_serial3_unmap_uart();
+	usb_serial3_bridge.uart = uart;
+	usb_serial3_bridge.uart_index = index;
+	usb_serial3_bridge.adapter.context = &usb_serial3_bridge;
+	usb_serial3_bridge.dropped_from_host = 0;
+	usb_serial3_bridge.dropped_from_uart = 0;
+	usb_serial_bridge_uart_begin(uart, usb_cdc3_line_coding[0], usb_serial_bridge_format_from_line_coding(usb_cdc3_line_coding[1]));
+	usb_serial_bridge_set_redirect(uart, usb_serial3_uart_rx_callback, &usb_serial3_bridge.adapter);
+}
+
+void usb_serial3_unmap_uart(void)
+{
+	if (!usb_serial3_bridge.uart) return;
+	usb_serial_bridge_clear_redirect(usb_serial3_bridge.uart, &usb_serial3_bridge.adapter);
+	usb_serial3_bridge.uart = NULL;
+	usb_serial3_bridge.uart_index = 0xFF;
+	usb_serial3_bridge.adapter.callback = NULL;
+	usb_serial3_bridge.adapter.context = NULL;
+}
+
+void usb_serial3_line_coding_changed(void)
+{
+	if (!usb_serial3_bridge.uart) return;
+	usb_serial_bridge_uart_begin(usb_serial3_bridge.uart, usb_cdc3_line_coding[0], usb_serial_bridge_format_from_line_coding(usb_cdc3_line_coding[1]));
 }
 
 

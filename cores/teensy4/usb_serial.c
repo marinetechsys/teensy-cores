@@ -142,6 +142,9 @@ static void rx_queue_transfer(int i)
 }
 
 // called by USB interrupt when any packet is received
+#pragma GCC push_options
+#pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+__attribute__ ((section(".fastrun"), noinline, noclone ))
 static void rx_event(transfer_t *t)
 {
 	int len = rx_packet_size - ((t->status >> 16) & 0x7FFF);
@@ -178,6 +181,7 @@ static void rx_event(transfer_t *t)
 		rx_queue_transfer(i);
 	}
 }
+#pragma GCC pop_options
 
 //static int maxtimes=0;
 
