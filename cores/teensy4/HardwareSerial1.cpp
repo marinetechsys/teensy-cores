@@ -56,8 +56,9 @@ void IRQHandler_Serial1()
 static BUFTYPE tx_buffer1[SERIAL1_TX_BUFFER_SIZE];
 static BUFTYPE rx_buffer1[SERIAL1_RX_BUFFER_SIZE];
 
-const HardwareSerialIMXRT::hardware_t UART6_Hardware = {
-	0, IRQ_LPUART6, &IRQHandler_Serial1, 
+HardwareSerialIMXRT Serial1(IMXRT_LPUART6_ADDRESS,
+{
+	0, IRQ_LPUART6, &IRQHandler_Serial1,
 	&serialEvent1,
 	CCM_CCGR3, CCM_CCGR3_LPUART6(CCM_CCGR_ON),
     UART_IRQ_PRIORITY,
@@ -71,10 +72,8 @@ const HardwareSerialIMXRT::hardware_t UART6_Hardware = {
 	0xff, // No CTS pin
 	0, // No CTS
 	38, 24, // IRQ, rts_low_watermark, rts_high_watermark
-	XBARA1_OUT_LPUART6_TRG_INPUT	// XBar Tigger 
-};
-HardwareSerialIMXRT Serial1(IMXRT_LPUART6_ADDRESS, &UART6_Hardware, tx_buffer1,
-	SERIAL1_TX_BUFFER_SIZE, rx_buffer1, SERIAL1_RX_BUFFER_SIZE);
+	XBARA1_OUT_LPUART6_TRG_INPUT	// XBar Tigger
+}, tx_buffer1, SERIAL1_TX_BUFFER_SIZE, rx_buffer1, SERIAL1_RX_BUFFER_SIZE);
 
 //void serialEvent1() __attribute__((weak));
 //void serialEvent1() {Serial1.disableSerialEvents(); }		// No use calling this so disable if called...

@@ -55,20 +55,19 @@ static BUFTYPE tx_buffer2[SERIAL2_TX_BUFFER_SIZE];
 static BUFTYPE rx_buffer2[SERIAL2_RX_BUFFER_SIZE];
 
 #ifndef ARDUINO_TEENSY_MICROMOD
-static HardwareSerialIMXRT::hardware_t UART4_Hardware = {
-	1, IRQ_LPUART4, &IRQHandler_Serial2, 
-	&serialEvent2,
-	CCM_CCGR1, CCM_CCGR1_LPUART4(CCM_CCGR_ON),
+HardwareSerialIMXRT Serial2(IMXRT_LPUART4_ADDRESS,
+{
+    1, IRQ_LPUART4, &IRQHandler_Serial2,
+    &serialEvent2,
+    CCM_CCGR1, CCM_CCGR1_LPUART4(CCM_CCGR_ON),
     UART_IRQ_PRIORITY,
-	{{7,2, &IOMUXC_LPUART4_RX_SELECT_INPUT, 2}, {0xff, 0xff, nullptr, 0}},
-	{{8,2, &IOMUXC_LPUART4_TX_SELECT_INPUT, 2}, {0xff, 0xff, nullptr, 0}},
-	0xff, // No CTS pin
-	0, // No CTS
-	38, 24, // IRQ, rts_low_watermark, rts_high_watermark
-	XBARA1_OUT_LPUART4_TRG_INPUT
-};
-HardwareSerialIMXRT Serial2(IMXRT_LPUART4_ADDRESS, &UART4_Hardware, tx_buffer2,
-	SERIAL2_TX_BUFFER_SIZE, rx_buffer2, SERIAL2_RX_BUFFER_SIZE);
+    {{7,2, &IOMUXC_LPUART4_RX_SELECT_INPUT, 2}, {0xff, 0xff, nullptr, 0}},
+    {{8,2, &IOMUXC_LPUART4_TX_SELECT_INPUT, 2}, {0xff, 0xff, nullptr, 0}},
+    0xff, // No CTS pin
+    0, // No CTS
+    38, 24, // IRQ, rts_low_watermark, rts_high_watermark
+    XBARA1_OUT_LPUART4_TRG_INPUT
+}, tx_buffer2, SERIAL2_TX_BUFFER_SIZE, rx_buffer2, SERIAL2_RX_BUFFER_SIZE);
 
 #else  // Teensy Micromod
 static HardwareSerialIMXRT::hardware_t UART3_Hardware = {

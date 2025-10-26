@@ -198,7 +198,7 @@ public:
 		const uint8_t xbar_out_lpuartX_trig_input;
 	} hardware_t;
 public:
-	constexpr HardwareSerialIMXRT(uintptr_t myport, hardware_t *myhardware,
+	constexpr HardwareSerialIMXRT(uintptr_t myport, hardware_t myhardware,
 		volatile BUFTYPE *_tx_buffer, size_t _tx_buffer_size, 
 		volatile BUFTYPE *_rx_buffer, size_t _rx_buffer_size) :
 		port_addr(myport), hardware(myhardware),
@@ -274,7 +274,7 @@ public:
 	{
 		if (priority < 4) priority = 4;
 		if (priority > 15) priority = 15;
-		hardware.irq_priority = priority;
+		hardware->irq_priority = priority;
 	};
 	
 	// Event Handler functions and data
@@ -308,7 +308,7 @@ public:
 	}
 private:
 	const uintptr_t port_addr;
-	hardware_t*         hardware;
+	hardware_t          hardware;
 	uint8_t				rx_pin_index_ = 0x0;	// default is always first item
 	uint8_t				tx_pin_index_ = 0x0;
 	uint8_t				half_duplex_mode_ = 0; // are we in half duplex mode?

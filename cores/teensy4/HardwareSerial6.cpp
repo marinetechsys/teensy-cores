@@ -54,18 +54,15 @@ void IRQHandler_Serial6()
 static BUFTYPE tx_buffer6[SERIAL6_TX_BUFFER_SIZE];
 static BUFTYPE rx_buffer6[SERIAL6_RX_BUFFER_SIZE];
 
-static HardwareSerialIMXRT::hardware_t UART1_Hardware = {
-	5, IRQ_LPUART1, &IRQHandler_Serial6, 
-	&serialEvent6,
-	CCM_CCGR5, CCM_CCGR5_LPUART1(CCM_CCGR_ON),
+HardwareSerialIMXRT Serial6(IMXRT_LPUART1_ADDRESS, {
+    5, IRQ_LPUART1, &IRQHandler_Serial6,
+    &serialEvent6,
+    CCM_CCGR5, CCM_CCGR5_LPUART1(CCM_CCGR_ON),
     UART_IRQ_PRIORITY,
-	{{25,2, nullptr, 0}, {0xff, 0xff, nullptr, 0}},
-	{{24,2, nullptr, 0}, {0xff, 0xff, nullptr, 0}},
-	0xff, // No CTS pin
-	0, // No CTS
-	38, 24, // IRQ, rts_low_watermark, rts_high_watermark
-	XBARA1_OUT_LPUART1_TRG_INPUT
-};
-
-HardwareSerialIMXRT Serial6(IMXRT_LPUART1_ADDRESS, &UART1_Hardware, tx_buffer6,
-	SERIAL6_TX_BUFFER_SIZE, rx_buffer6, SERIAL6_RX_BUFFER_SIZE);
+    {{25,2, nullptr, 0}, {0xff, 0xff, nullptr, 0}},
+    {{24,2, nullptr, 0}, {0xff, 0xff, nullptr, 0}},
+    0xff, // No CTS pin
+    0, // No CTS
+    38, 24, // IRQ, rts_low_watermark, rts_high_watermark
+    XBARA1_OUT_LPUART1_TRG_INPUT
+}, tx_buffer6, SERIAL6_TX_BUFFER_SIZE, rx_buffer6, SERIAL6_RX_BUFFER_SIZE);

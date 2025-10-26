@@ -56,18 +56,16 @@ void IRQHandler_Serial8()
 static BUFTYPE tx_buffer8[SERIAL8_TX_BUFFER_SIZE];
 static BUFTYPE rx_buffer8[SERIAL8_RX_BUFFER_SIZE];
 
-static HardwareSerialIMXRT::hardware_t UART5_Hardware = {
-	7, IRQ_LPUART5, &IRQHandler_Serial8, 
-	&serialEvent8,
-	CCM_CCGR3, CCM_CCGR3_LPUART5(CCM_CCGR_ON),
+HardwareSerialIMXRT Serial8(IMXRT_LPUART5_ADDRESS, {
+    7, IRQ_LPUART5, &IRQHandler_Serial8,
+    &serialEvent8,
+    CCM_CCGR3, CCM_CCGR3_LPUART5(CCM_CCGR_ON),
     UART_IRQ_PRIORITY,
-	{{34,1, &IOMUXC_LPUART5_RX_SELECT_INPUT, 1}, {48, 2, &IOMUXC_LPUART5_RX_SELECT_INPUT, 0}},
-	{{35,1, &IOMUXC_LPUART5_TX_SELECT_INPUT, 1}, {0xff, 0xff, nullptr, 0}},
-	50, // CTS pin
-	2, //  CTS
-	38, 24, // IRQ, rts_low_watermark, rts_high_watermark
-	XBARA1_OUT_LPUART5_TRG_INPUT
-};
-HardwareSerialIMXRT Serial8(IMXRT_LPUART5_ADDRESS, &UART5_Hardware, tx_buffer8,
-	SERIAL8_TX_BUFFER_SIZE, rx_buffer8, SERIAL8_RX_BUFFER_SIZE);
+    {{34,1, &IOMUXC_LPUART5_RX_SELECT_INPUT, 1}, {48, 2, &IOMUXC_LPUART5_RX_SELECT_INPUT, 0}},
+    {{35,1, &IOMUXC_LPUART5_TX_SELECT_INPUT, 1}, {0xff, 0xff, nullptr, 0}},
+    50, // CTS pin
+    2, //  CTS
+    38, 24, // IRQ, rts_low_watermark, rts_high_watermark
+    XBARA1_OUT_LPUART5_TRG_INPUT
+}, tx_buffer8, SERIAL8_TX_BUFFER_SIZE, rx_buffer8, SERIAL8_RX_BUFFER_SIZE);
 #endif

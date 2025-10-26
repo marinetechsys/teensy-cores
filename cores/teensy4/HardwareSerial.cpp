@@ -131,46 +131,46 @@ void HardwareSerialIMXRT::begin(uint32_t baud, uint16_t format)
 	rx_buffer_tail_ = 0;
 	tx_buffer_head_ = 0;
 	tx_buffer_tail_ = 0;
-	rts_low_watermark_ = rx_buffer_total_size_ - hardware->rts_low_watermark;
-	rts_high_watermark_ = rx_buffer_total_size_ - hardware->rts_high_watermark;
+	rts_low_watermark_ = rx_buffer_total_size_ - hardware.rts_low_watermark;
+	rts_high_watermark_ = rx_buffer_total_size_ - hardware.rts_high_watermark;
 
 	transmitting_ = 0;
 
-	hardware->ccm_register |= hardware->ccm_value;
+	hardware.ccm_register |= hardware.ccm_value;
 
 //	uint32_t fastio = IOMUXC_PAD_SRE | IOMUXC_PAD_DSE(3) | IOMUXC_PAD_SPEED(3);
 
 	// Maybe different pin configs if half duplex
 	half_duplex_mode_ = (format & SERIAL_HALF_DUPLEX) != 0;
 	if (!half_duplex_mode_)  {
-		*(portControlRegister(hardware->rx_pins[rx_pin_index_].pin)) = IOMUXC_PAD_DSE(7) | IOMUXC_PAD_PKE | IOMUXC_PAD_PUE | IOMUXC_PAD_PUS(3) | IOMUXC_PAD_HYS;
-		*(portConfigRegister(hardware->rx_pins[rx_pin_index_].pin)) = hardware->rx_pins[rx_pin_index_].mux_val;
-		if (hardware->rx_pins[rx_pin_index_].select_input_register) {
-		 	*(hardware->rx_pins[rx_pin_index_].select_input_register) =  hardware->rx_pins[rx_pin_index_].select_val;		
+		*(portControlRegister(hardware.rx_pins[rx_pin_index_].pin)) = IOMUXC_PAD_DSE(7) | IOMUXC_PAD_PKE | IOMUXC_PAD_PUE | IOMUXC_PAD_PUS(3) | IOMUXC_PAD_HYS;
+		*(portConfigRegister(hardware.rx_pins[rx_pin_index_].pin)) = hardware.rx_pins[rx_pin_index_].mux_val;
+		if (hardware.rx_pins[rx_pin_index_].select_input_register) {
+		 	*(hardware.rx_pins[rx_pin_index_].select_input_register) =  hardware.rx_pins[rx_pin_index_].select_val;
 		}	
 
-		*(portControlRegister(hardware->tx_pins[tx_pin_index_].pin)) =  IOMUXC_PAD_SRE | IOMUXC_PAD_DSE(3) | IOMUXC_PAD_SPEED(3);
-		*(portConfigRegister(hardware->tx_pins[tx_pin_index_].pin)) = hardware->tx_pins[tx_pin_index_].mux_val;
+		*(portControlRegister(hardware.tx_pins[tx_pin_index_].pin)) =  IOMUXC_PAD_SRE | IOMUXC_PAD_DSE(3) | IOMUXC_PAD_SPEED(3);
+		*(portConfigRegister(hardware.tx_pins[tx_pin_index_].pin)) = hardware.tx_pins[tx_pin_index_].mux_val;
 	} else {
 		// Half duplex maybe different pin pad config like PU...		
-		*(portControlRegister(hardware->tx_pins[tx_pin_index_].pin)) =  IOMUXC_PAD_SRE | IOMUXC_PAD_DSE(3) | IOMUXC_PAD_SPEED(3) 
+		*(portControlRegister(hardware.tx_pins[tx_pin_index_].pin)) =  IOMUXC_PAD_SRE | IOMUXC_PAD_DSE(3) | IOMUXC_PAD_SPEED(3)
 				| IOMUXC_PAD_PKE | IOMUXC_PAD_PUE | IOMUXC_PAD_PUS(3);
-		*(portConfigRegister(hardware->tx_pins[tx_pin_index_].pin)) = hardware->tx_pins[tx_pin_index_].mux_val;
+		*(portConfigRegister(hardware.tx_pins[tx_pin_index_].pin)) = hardware.tx_pins[tx_pin_index_].mux_val;
 	}
-	if (hardware->tx_pins[tx_pin_index_].select_input_register) {
-	 	*(hardware->tx_pins[tx_pin_index_].select_input_register) =  hardware->tx_pins[tx_pin_index_].select_val;		
+	if (hardware.tx_pins[tx_pin_index_].select_input_register) {
+	 	*(hardware.tx_pins[tx_pin_index_].select_input_register) =  hardware.tx_pins[tx_pin_index_].select_val;
 	}	
-	//hardware->rx_mux_register = hardware->rx_mux_val;
-	//hardware->tx_mux_register = hardware->tx_mux_val;
+	//hardware.rx_mux_register = hardware.rx_mux_val;
+	//hardware.tx_mux_register = hardware.tx_mux_val;
 
 	port->BAUD = LPUART_BAUD_OSR(bestosr - 1) | LPUART_BAUD_SBR(bestdiv)
 		| (bestosr <= 8 ? LPUART_BAUD_BOTHEDGE : 0);
 	port->PINCFG = 0;
 
 	// Enable the transmitter, receiver and enable receiver interrupt
-	attachInterruptVector(hardware->irq, hardware->irq_handler);
-	NVIC_SET_PRIORITY(hardware->irq, hardware->irq_priority);	// maybe should put into hardware...
-	NVIC_ENABLE_IRQ(hardware->irq);
+	attachInterruptVector(hardware.irq, hardware.irq_handler);
+	NVIC_SET_PRIORITY(hardware.irq, hardware.irq_priority);	// maybe should put into hardware...
+	NVIC_ENABLE_IRQ(hardware.irq);
 
 	// FIFO size
 	// According to IMXRT1060RM_rev2.pdf, page 2875, Section 49.4.1.12.3 Diagram,
@@ -214,7 +214,7 @@ void HardwareSerialIMXRT::begin(uint32_t baud, uint16_t format)
 		ctrl |= LPUART_CTRL_TXINV;		// tx invert
 
 		// if half duplex mode - PU on TX should be PD. 
-		if (half_duplex_mode_) *(portControlRegister(hardware->tx_pins[tx_pin_index_].pin)) &=  ~IOMUXC_PAD_PUS(3);
+		if (half_duplex_mode_) *(portControlRegister(hardware.tx_pins[tx_pin_index_].pin)) &=  ~IOMUXC_PAD_PUS(3);
 	}
 
 	// Now see if the user asked for Half duplex:
@@ -239,7 +239,7 @@ void HardwareSerialIMXRT::begin(uint32_t baud, uint16_t format)
 
 	// Enable the processing of serialEvent for this object, if user function exists.
 	// Linker will assign NULL for a weak function which isn't implemented.
-	if (hardware->_serialEvent) addToSerialEventsList();
+	if (hardware._serialEvent) addToSerialEventsList();
 };
 
 inline void HardwareSerialIMXRT::rts_assert()
@@ -256,13 +256,13 @@ inline void HardwareSerialIMXRT::rts_deassert()
 void HardwareSerialIMXRT::end(void)
 {
 	IMXRT_LPUART_t *port = (IMXRT_LPUART_t *)port_addr;
-	if (!(hardware->ccm_register & hardware->ccm_value)) return;
+	if (!(hardware.ccm_register & hardware.ccm_value)) return;
 	while (transmitting_) yield();  // wait for buffered data to send
 	port->CTRL = 0;	// disable the TX and RX ...
 
 	// Not sure if this is best, but I think most IO pins default to Mode 5? which appears to be digital IO? 
-	*(portConfigRegister(hardware->rx_pins[rx_pin_index_].pin)) = 5;
-	*(portConfigRegister(hardware->tx_pins[tx_pin_index_].pin)) = 5;
+	*(portConfigRegister(hardware.rx_pins[rx_pin_index_].pin)) = 5;
+	*(portConfigRegister(hardware.tx_pins[tx_pin_index_].pin)) = 5;
 
 
 	// Might need to clear out other areas as well? 
@@ -284,19 +284,19 @@ void HardwareSerialIMXRT::transmitterEnable(uint8_t pin)
 void HardwareSerialIMXRT::setRX(uint8_t pin)
 {
 	IMXRT_LPUART_t *port = (IMXRT_LPUART_t *)port_addr;
-	if (pin != hardware->rx_pins[rx_pin_index_].pin) {
+	if (pin != hardware.rx_pins[rx_pin_index_].pin) {
 		for (uint8_t rx_pin_new_index = 0; rx_pin_new_index < cnt_rx_pins; rx_pin_new_index++) {
-			if (pin == hardware->rx_pins[rx_pin_new_index].pin) {
+			if (pin == hardware.rx_pins[rx_pin_new_index].pin) {
 				// new pin - so lets maybe reset the old pin to INPUT? and then set new pin parameters
 				// only change IO pins if done after begin has been called. 
-				if ((hardware->ccm_register & hardware->ccm_value)) {
-					*(portConfigRegister(hardware->rx_pins[rx_pin_index_].pin)) = 5;
+				if ((hardware.ccm_register & hardware.ccm_value)) {
+					*(portConfigRegister(hardware.rx_pins[rx_pin_index_].pin)) = 5;
 
 					// now set new pin info.
-					*(portControlRegister(hardware->rx_pins[rx_pin_new_index].pin)) =  IOMUXC_PAD_DSE(7) | IOMUXC_PAD_PKE | IOMUXC_PAD_PUE | IOMUXC_PAD_PUS(3) | IOMUXC_PAD_HYS;;
-					*(portConfigRegister(hardware->rx_pins[rx_pin_new_index].pin)) = hardware->rx_pins[rx_pin_new_index].mux_val;
-					if (hardware->rx_pins[rx_pin_new_index].select_input_register) {
-					 	*(hardware->rx_pins[rx_pin_new_index].select_input_register) =  hardware->rx_pins[rx_pin_new_index].select_val;		
+					*(portControlRegister(hardware.rx_pins[rx_pin_new_index].pin)) =  IOMUXC_PAD_DSE(7) | IOMUXC_PAD_PKE | IOMUXC_PAD_PUE | IOMUXC_PAD_PUS(3) | IOMUXC_PAD_HYS;;
+					*(portConfigRegister(hardware.rx_pins[rx_pin_new_index].pin)) = hardware.rx_pins[rx_pin_new_index].mux_val;
+					if (hardware.rx_pins[rx_pin_new_index].select_input_register) {
+					 	*(hardware.rx_pins[rx_pin_new_index].select_input_register) =  hardware.rx_pins[rx_pin_new_index].select_val;
 					}
 				}		
 				rx_pin_index_ = rx_pin_new_index;
@@ -308,9 +308,9 @@ void HardwareSerialIMXRT::setRX(uint8_t pin)
 			if (pin_to_xbar_info[i].pin == pin) {
 				// So it is an XBAR pin set the XBAR..
 				//Serial.printf("ACTS XB(%d), X(%u %u), MUX:%x\n", i, pin_to_xbar_info[i].xbar_in_index, 
-				//			hardware->xbar_out_lpuartX_trig_input,  pin_to_xbar_info[i].mux_val);
+				//			hardware.xbar_out_lpuartX_trig_input,  pin_to_xbar_info[i].mux_val);
 				CCM_CCGR2 |= CCM_CCGR2_XBAR1(CCM_CCGR_ON);
-				xbar_connect(pin_to_xbar_info[i].xbar_in_index, hardware->xbar_out_lpuartX_trig_input);
+				xbar_connect(pin_to_xbar_info[i].xbar_in_index, hardware.xbar_out_lpuartX_trig_input);
 
 				// We need to update port register to use this as the trigger
 				port->PINCFG = LPUART_PINCFG_TRGSEL(1);  // Trigger select as alternate RX
@@ -332,9 +332,9 @@ void HardwareSerialIMXRT::setTX(uint8_t pin, bool opendrain)
 {
 	uint8_t tx_pin_new_index = tx_pin_index_;
 
-	if (pin != hardware->tx_pins[tx_pin_index_].pin) {
+	if (pin != hardware.tx_pins[tx_pin_index_].pin) {
 		for (tx_pin_new_index = 0; tx_pin_new_index < cnt_tx_pins; tx_pin_new_index++) {
-			if (pin == hardware->tx_pins[tx_pin_new_index].pin) {
+			if (pin == hardware.tx_pins[tx_pin_new_index].pin) {
 				break;
 			}
 		}
@@ -343,11 +343,11 @@ void HardwareSerialIMXRT::setTX(uint8_t pin, bool opendrain)
 
 	// turn on or off opendrain mode.
 	// new pin - so lets maybe reset the old pin to INPUT? and then set new pin parameters
-	if ((hardware->ccm_register & hardware->ccm_value)) {  // only do if we are already active. 
+	if ((hardware.ccm_register & hardware.ccm_value)) {  // only do if we are already active.
 	if (tx_pin_new_index != tx_pin_index_) {
-		*(portConfigRegister(hardware->tx_pins[tx_pin_index_].pin)) = 5;
+		*(portConfigRegister(hardware.tx_pins[tx_pin_index_].pin)) = 5;
 	
-		*(portConfigRegister(hardware->tx_pins[tx_pin_new_index].pin)) = hardware->tx_pins[tx_pin_new_index].mux_val;
+		*(portConfigRegister(hardware.tx_pins[tx_pin_new_index].pin)) = hardware.tx_pins[tx_pin_new_index].mux_val;
 	}
 	}
 	// now set new pin info.
@@ -361,7 +361,7 @@ void HardwareSerialIMXRT::setTX(uint8_t pin, bool opendrain)
 
 bool HardwareSerialIMXRT::attachRts(uint8_t pin)
 {
-	if (!(hardware->ccm_register & hardware->ccm_value)) return 0;
+	if (!(hardware.ccm_register & hardware.ccm_value)) return 0;
 	if (pin < CORE_NUM_DIGITAL) {
 		rts_pin_baseReg_ = PIN_TO_BASEREG(pin);
 		rts_pin_bitmask_ = PIN_TO_BITMASK(pin);
@@ -377,11 +377,11 @@ bool HardwareSerialIMXRT::attachRts(uint8_t pin)
 bool HardwareSerialIMXRT::attachCts(uint8_t pin)
 {
 	IMXRT_LPUART_t *port = (IMXRT_LPUART_t *)port_addr;
-	if (!(hardware->ccm_register & hardware->ccm_value)) return false;
-	if ((pin != 0xff) && (pin == hardware->cts_pin)) {
+	if (!(hardware.ccm_register & hardware.ccm_value)) return false;
+	if ((pin != 0xff) && (pin == hardware.cts_pin)) {
 		// Setup the IO pin as weak PULL down. 
 		*(portControlRegister(pin)) = IOMUXC_PAD_DSE(7) | IOMUXC_PAD_PKE | IOMUXC_PAD_PUE | IOMUXC_PAD_PUS(0) | IOMUXC_PAD_HYS;
-		*(portConfigRegister(hardware->cts_pin)) = hardware->cts_mux_val;
+		*(portConfigRegister(hardware.cts_pin)) = hardware.cts_mux_val;
 		port->MODIR |= LPUART_MODIR_TXCTSE;
 		return true;
 	} else {
@@ -390,9 +390,9 @@ bool HardwareSerialIMXRT::attachCts(uint8_t pin)
 			if (pin_to_xbar_info[i].pin == pin) {
 				// So it is an XBAR pin set the XBAR..
 				//Serial.printf("ACTS XB(%d), X(%u %u), MUX:%x\n", i, pin_to_xbar_info[i].xbar_in_index, 
-				//			hardware->xbar_out_lpuartX_trig_input,  pin_to_xbar_info[i].mux_val);
+				//			hardware.xbar_out_lpuartX_trig_input,  pin_to_xbar_info[i].mux_val);
 				CCM_CCGR2 |= CCM_CCGR2_XBAR1(CCM_CCGR_ON);
-				xbar_connect(pin_to_xbar_info[i].xbar_in_index, hardware->xbar_out_lpuartX_trig_input);
+				xbar_connect(pin_to_xbar_info[i].xbar_in_index, hardware.xbar_out_lpuartX_trig_input);
 
 				// We need to update port register to use this as the trigger
 				port->PINCFG = LPUART_PINCFG_TRGSEL(2);  // Trigger select as alternate CTS pin
@@ -463,8 +463,8 @@ void HardwareSerialIMXRT::addMemoryForRead(void *buffer, size_t length)
 	// Make sure we don't end up indexing into no mans land. 
 	rx_buffer_head_ = 0;
 	rx_buffer_tail_ = 0;
-	rts_low_watermark_ = rx_buffer_total_size_ - hardware->rts_low_watermark;
-	rts_high_watermark_ = rx_buffer_total_size_ - hardware->rts_high_watermark;
+	rts_low_watermark_ = rx_buffer_total_size_ - hardware.rts_low_watermark;
+	rts_high_watermark_ = rx_buffer_total_size_ - hardware.rts_high_watermark;
 }
 
 void HardwareSerialIMXRT::addMemoryForWrite(void *buffer, size_t length)
@@ -584,7 +584,7 @@ size_t HardwareSerialIMXRT::write9bit(uint32_t c)
 	if (++head >= tx_buffer_total_size_) head = 0;
 	while (tx_buffer_tail_ == head) {
 		int priority = nvic_execution_priority();
-		if (priority <= hardware->irq_priority) {
+		if (priority <= hardware.irq_priority) {
 			if ((port->STAT & LPUART_STAT_TDRE)) {
 				uint32_t tail = tx_buffer_tail_;
 				if (++tail >= tx_buffer_total_size_) tail = 0;
