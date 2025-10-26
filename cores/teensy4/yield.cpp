@@ -30,9 +30,48 @@
 
 #include <Arduino.h>
 #include "EventResponder.h"
+#include "core_pins.h"
+#include "arm_math.h"	// micros() synchronization
 
 volatile uint8_t yield_active_check_flags = 0;
 
+extern "C" {
+extern volatile uint32_t systick_millis_count;
+extern volatile uint32_t systick_cycle_count;
+extern volatile uint32_t scale_cpu_cycles_to_microseconds;
+extern uint32_t systick_safe_read;
+} // extern C
+
+
+#pragma GCC push_options
+#pragma GCC optimize ("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
+
+FASTRUN uint64_t get_us() {
+    uint32_t smc, scc, cyccnt;
+    do {
+        __LDREXW(&systick_safe_read);
+        smc = systick_millis_count;
+        scc = systick_cycle_count;
+        cyccnt = ARM_DWT_CYCCNT;
+    } while (__STREXW(1, &systick_safe_read));
+
+    const uint32_t ccdelta { cyccnt - scc };
+    const uint32_t frac { static_cast<uint32_t>((static_cast<uint64_t>(ccdelta) * scale_cpu_cycles_to_microseconds) >> 32) };
+
+    return static_cast<uint64_t>(smc) * 1'000ULL + frac;
+}
+
+FASTRUN uint64_t get_us_from_isr() {
+    const uint32_t smc { systick_millis_count };
+    const uint32_t scc { systick_cycle_count };
+    const uint32_t cyccnt { ARM_DWT_CYCCNT };
+    const uint32_t ccdelta { cyccnt - scc };
+    const uint32_t frac { static_cast<uint32_t>((static_cast<uint64_t>(ccdelta) * scale_cpu_cycles_to_microseconds) >> 32) };
+
+    return static_cast<uint64_t>(smc) * 1'000ULL + frac;
+}
+
+#pragma GCC pop_options
 
 void yield(void) __attribute__ ((weak));
 void yield(void)

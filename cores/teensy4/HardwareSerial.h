@@ -269,6 +269,13 @@ public:
 		addMemoryForWrite(buffer, length);
 	}
 	size_t write9bit(uint32_t c);
+
+	void irqPriority(uint16_t priority)
+	{
+		if (priority < 4) priority = 4;
+		if (priority > 15) priority = 15;
+		hardware.irq_priority = priority;
+	};
 	
 	// Event Handler functions and data
 	static uint8_t serial_event_handlers_active;
