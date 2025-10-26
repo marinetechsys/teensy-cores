@@ -38,7 +38,9 @@
 #ifndef SERIAL1_RX_BUFFER_SIZE
 #define SERIAL1_RX_BUFFER_SIZE     64 // number of incoming bytes to buffer
 #endif
-#define IRQ_PRIORITY  64  // 0 = highest priority, 255 = lowest
+#ifndef UART_IRQ_PRIORITY
+#define UART_IRQ_PRIORITY  64  // 0 = highest priority, 255 = lowest
+#endif
 
 #pragma GCC push_options
 #pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
@@ -58,6 +60,7 @@ const HardwareSerialIMXRT::hardware_t UART6_Hardware = {
 	0, IRQ_LPUART6, &IRQHandler_Serial1, 
 	&serialEvent1,
 	CCM_CCGR3, CCM_CCGR3_LPUART6(CCM_CCGR_ON),
+    UART_IRQ_PRIORITY,
 	#if defined(ARDUINO_TEENSY41)
 	{{0,2, &IOMUXC_LPUART6_RX_SELECT_INPUT, 1}, {52, 2, &IOMUXC_LPUART6_RX_SELECT_INPUT, 0}},
 	{{1,2, &IOMUXC_LPUART6_TX_SELECT_INPUT, 1}, {53, 2, &IOMUXC_LPUART6_TX_SELECT_INPUT, 0}},
@@ -67,7 +70,7 @@ const HardwareSerialIMXRT::hardware_t UART6_Hardware = {
 	#endif
 	0xff, // No CTS pin
 	0, // No CTS
-	IRQ_PRIORITY, 38, 24, // IRQ, rts_low_watermark, rts_high_watermark
+	38, 24, // IRQ, rts_low_watermark, rts_high_watermark
 	XBARA1_OUT_LPUART6_TRG_INPUT	// XBar Tigger 
 };
 HardwareSerialIMXRT Serial1(IMXRT_LPUART6_ADDRESS, &UART6_Hardware, tx_buffer1,

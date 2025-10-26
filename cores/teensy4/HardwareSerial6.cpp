@@ -37,7 +37,9 @@
 #ifndef SERIAL6_RX_BUFFER_SIZE
 #define SERIAL6_RX_BUFFER_SIZE     64 // number of incoming bytes to buffer
 #endif
-#define IRQ_PRIORITY  64  // 0 = highest priority, 255 = lowest
+#ifndef UART_IRQ_PRIORITY
+#define UART_IRQ_PRIORITY  64  // 0 = highest priority, 255 = lowest
+#endif
 
 #pragma GCC push_options
 #pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
@@ -56,11 +58,12 @@ static HardwareSerialIMXRT::hardware_t UART1_Hardware = {
 	5, IRQ_LPUART1, &IRQHandler_Serial6, 
 	&serialEvent6,
 	CCM_CCGR5, CCM_CCGR5_LPUART1(CCM_CCGR_ON),
+    UART_IRQ_PRIORITY,
 	{{25,2, nullptr, 0}, {0xff, 0xff, nullptr, 0}},
 	{{24,2, nullptr, 0}, {0xff, 0xff, nullptr, 0}},
 	0xff, // No CTS pin
 	0, // No CTS
-	IRQ_PRIORITY, 38, 24, // IRQ, rts_low_watermark, rts_high_watermark
+	38, 24, // IRQ, rts_low_watermark, rts_high_watermark
 	XBARA1_OUT_LPUART1_TRG_INPUT
 };
 

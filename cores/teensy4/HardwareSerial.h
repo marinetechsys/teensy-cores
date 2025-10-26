@@ -188,17 +188,17 @@ public:
 		void (* _serialEvent)(void);
 		volatile uint32_t &ccm_register;
 		const uint32_t ccm_value;
+		uint16_t irq_priority;
 		pin_info_t rx_pins[cnt_rx_pins];
 		pin_info_t tx_pins[cnt_tx_pins];
 		const uint8_t cts_pin;
 		const uint8_t cts_mux_val;
-		const uint16_t irq_priority;
 		const uint16_t rts_low_watermark;
 		const uint16_t rts_high_watermark;
 		const uint8_t xbar_out_lpuartX_trig_input;
 	} hardware_t;
 public:
-	constexpr HardwareSerialIMXRT(uintptr_t myport, const hardware_t *myhardware,
+	constexpr HardwareSerialIMXRT(uintptr_t myport, hardware_t *myhardware,
 		volatile BUFTYPE *_tx_buffer, size_t _tx_buffer_size, 
 		volatile BUFTYPE *_rx_buffer, size_t _rx_buffer_size) :
 		port_addr(myport), hardware(myhardware),
@@ -308,7 +308,7 @@ public:
 	}
 private:
 	const uintptr_t port_addr;
-	const hardware_t * const hardware;
+	hardware_t*         hardware;
 	uint8_t				rx_pin_index_ = 0x0;	// default is always first item
 	uint8_t				tx_pin_index_ = 0x0;
 	uint8_t				half_duplex_mode_ = 0; // are we in half duplex mode?

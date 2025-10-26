@@ -5,5 +5,6 @@
 
 #include "WProgram.h"
 #include "pins_arduino.h"
+#include "clock.hpp"
 
 #endif

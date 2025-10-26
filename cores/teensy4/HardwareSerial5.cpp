@@ -37,7 +37,9 @@
 #ifndef SERIAL5_RX_BUFFER_SIZE
 #define SERIAL5_RX_BUFFER_SIZE     64 // number of incoming bytes to buffer
 #endif
-#define IRQ_PRIORITY  64  // 0 = highest priority, 255 = lowest
+#ifndef UART_IRQ_PRIORITY
+#define UART_IRQ_PRIORITY  64  // 0 = highest priority, 255 = lowest
+#endif
 
 #pragma GCC push_options
 #pragma GCC optimize("-fno-unwind-tables", "-fno-asynchronous-unwind-tables", "-fno-exceptions")
@@ -56,6 +58,7 @@ static HardwareSerialIMXRT::hardware_t UART8_Hardware = {
 	4, IRQ_LPUART8, &IRQHandler_Serial5, 
 	&serialEvent5,
 	CCM_CCGR6, CCM_CCGR6_LPUART8(CCM_CCGR_ON),
+    UART_IRQ_PRIORITY,
 	#if defined(ARDUINO_TEENSY41)
 	{{21,2, &IOMUXC_LPUART8_RX_SELECT_INPUT, 1}, {46, 2, &IOMUXC_LPUART8_RX_SELECT_INPUT, 0}},
 	{{20,2, &IOMUXC_LPUART8_TX_SELECT_INPUT, 1}, {47, 2, &IOMUXC_LPUART8_TX_SELECT_INPUT, 0}},
@@ -72,7 +75,7 @@ static HardwareSerialIMXRT::hardware_t UART8_Hardware = {
 	35, //  CTS pin
 	2, //  CTS
 	#endif
-	IRQ_PRIORITY, 38, 24, // IRQ, rts_low_watermark, rts_high_watermark
+	38, 24, // IRQ, rts_low_watermark, rts_high_watermark
 	XBARA1_OUT_LPUART8_TRG_INPUT
 };
 HardwareSerialIMXRT Serial5(IMXRT_LPUART8_ADDRESS, &UART8_Hardware, tx_buffer5,
