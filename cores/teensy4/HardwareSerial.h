@@ -355,7 +355,7 @@ private:
 	static uint8_t 			s_count_serials_with_serial_events;
 	void addToSerialEventsList(); 
 	inline void doYieldCode()  {
-		if (available()) (*hardware->_serialEvent)();
+		if (available()) (*hardware._serialEvent)();
 	}
 
 
