@@ -274,7 +274,7 @@ public:
 	{
 		if (priority < 4) priority = 4;
 		if (priority > 15) priority = 15;
-		hardware->irq_priority = priority;
+		hardware.irq_priority = priority;
 	};
 	
 	// Event Handler functions and data
