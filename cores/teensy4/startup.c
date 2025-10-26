@@ -5,8 +5,11 @@
 #include "tlsf_alloc.h"
 #include <string.h>
 #include <unwind.h>
-
 #include "debug/printf.h"
+
+#ifndef __NVIC_PRIO_BITS
+  #define __NVIC_PRIO_BITS          3U
+#endif
 
 // from the linker
 extern unsigned long _stextload;
