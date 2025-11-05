@@ -87,17 +87,17 @@ class PWMServo
 #endif
   public:
     PWMServo();
-    uint8_t attach(int pinArg) { return attach(pinArg, 544, 2400); }
+    virtual uint8_t attach(int pinArg) { return attach(pinArg, 544, 2400); }
                              // pulse length for 0 degrees in microseconds, 544uS default
                              // pulse length for 180 degrees in microseconds, 2400uS default
-    uint8_t attach(int pinArg, int min, int max);
+    virtual uint8_t attach(int pinArg, int min, int max);
                              // attach to a pin, sets pinMode, returns 0 on failure, won't
                              // position the servo until a subsequent write() happens
                              // Only works for 9 and 10.
-    void detach();
-    void write(int angleArg); // specify the angle in degrees, 0 to 180
-    uint8_t read() { return angle; }
-    uint8_t attached();
+    virtual void detach();
+    virtual void write(int angleArg); // specify the angle in degrees, 0 to 180
+    virtual uint8_t read() { return angle; }
+    virtual uint8_t attached();
 };
 
 #endif
