@@ -47,7 +47,7 @@ void PWMServo::seizeTimer1()
   ;
   OCR1A = 3000;
   OCR1B = 3000;
-  ICR1 = clockCyclesPerMicrosecond()*(20000L/8);  // 20000 uS is a bit fast for the refresh, 20ms, but 
+  ICR1 = clockCyclesPerMicrosecond()*(20000L/8);  // 20000 uS is a bit fast for the refresh, 20ms, but
                                                   // it keeps us from overflowing ICR1 at 20MHz clocks
                                                   // That "/8" at the end is the prescaler.
 #if defined(__AVR_ATmega8__)
@@ -56,7 +56,7 @@ void PWMServo::seizeTimer1()
   TIMSK1 &=  ~(_BV(OCIE1A) | _BV(OCIE1B) | _BV(TOIE1) );
 #endif
 
-  SREG = oldSREG;  // undo cli()    
+  SREG = oldSREG;  // undo cli()
 }
 
 void PWMServo::releaseTimer1() {}
@@ -186,6 +186,15 @@ uint8_t PWMServo::attach(int pinArg, int min, int max)
 	return 1;
 }
 
+void PWMServo::detach()
+{
+	if (pin >= NUM_DIGITAL_PINS) return;
+	// Mark pin as unused in bitmap
+	attachedpins[pin >> 5] &= ~(1 << (pin & 31));
+	digitalWrite(pin, LOW);
+	pinMode(pin, INPUT); // Hi-z
+}
+
 void PWMServo::write(int angleArg)
 {
 	//Serial.printf("write, pin=%d, angle=%d\n", pin, angleArg);
@@ -276,5 +285,3 @@ uint8_t PWMServo::attached()
 	return (attachedpins[pin >> 5] & (1 << (pin & 31))) ? 1 : 0;
 }
 #endif
-
-
